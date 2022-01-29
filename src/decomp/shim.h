@@ -19,7 +19,7 @@
 #define gSpecialTripleJump   (g_state->mgSpecialTripleJump)
 #define gCurrLevelNum        (g_state->mgCurrLevelNum)
 #define gCameraMovementFlags (g_state->mgCameraMovementFlags)
-#define gAudioRandom         (g_state->mgAudioRandom)
+//#define gAudioRandom         (g_state->mgAudioRandom)
 #define gShowDebugText       (g_state->mgShowDebugText)
 #define gDebugLevelSelect    (g_state->mgDebugLevelSelect)
 #define gCurrSaveFileNum     (g_state->mgCurrSaveFileNum)
@@ -36,7 +36,7 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
 
-static void play_sound(s32 soundBits, f32 *pos) {}
+//static void play_sound(s32 soundBits, f32 *pos) {}
 static void enable_time_stop() {}
 static void disable_time_stop() {}
 static void *segmented_to_virtual(const void *addr) { return (void*)addr; }

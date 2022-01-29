@@ -7,7 +7,7 @@
 
 #include "area.h"
 //#include "actors/common1.h"
-//#include "audio/external.h"
+#include "../audio/external.h"
 //#include "behavior_actions.h"
 //#include "behavior_data.h"
 #include "camera.h"

@@ -4,7 +4,7 @@ CC      := cc
 CFLAGS  := -g -Wall -fPIC -DSM64_LIB_EXPORT
 LDFLAGS := -lm -shared
 
-SRC_DIRS  := src src/decomp src/decomp/engine src/decomp/game src/decomp/mario src/decomp/tools
+SRC_DIRS  := src src/decomp src/decomp/audio src/decomp/engine src/decomp/game src/decomp/mario src/decomp/tools
 BUILD_DIR := build
 DIST_DIR  := dist
 ALL_DIRS  := $(addprefix $(BUILD_DIR)/,$(SRC_DIRS))
