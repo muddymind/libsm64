@@ -81,7 +81,7 @@ struct SM64MarioModelColors
 	struct SM64MarioColorGroup brown2;
 };
 
-struct SM64Animation
+struct LibSM64Animation
 {
 	int16_t flags;
 	int16_t animYTransDivisor;
@@ -98,7 +98,7 @@ struct SM64AnimInfo
 {
 	int16_t animID;
 	int16_t animYTrans;
-	struct SM64Animation *curAnim;
+	struct LibSM64Animation *curAnim;
 	int16_t animFrame;
 	uint16_t animTimer;
 	int32_t animFrameAccelAssist;
@@ -130,6 +130,7 @@ extern SM64_LIB_FN void sm64_set_mario_action(int32_t marioId, uint32_t action);
 extern SM64_LIB_FN void sm64_set_mario_state(int32_t marioId, uint32_t flags);
 extern SM64_LIB_FN void sm64_set_mario_position(int32_t marioId, float x, float y, float z);
 extern SM64_LIB_FN void sm64_set_mario_angle(int32_t marioId, int16_t x, int16_t y, int16_t z);
+extern SM64_LIB_FN void sm64_set_mario_faceangle(int32_t marioId, int16_t y);
 extern SM64_LIB_FN void sm64_set_mario_velocity(int32_t marioId, float x, float y, float z);
 extern SM64_LIB_FN void sm64_set_mario_forward_velocity(int32_t marioId, float vel);
 extern SM64_LIB_FN void sm64_set_mario_water_level(int32_t marioId, signed int level);

@@ -35,7 +35,7 @@ struct GlobalState
     s8 mgShowDebugText;
     s8 mgDebugLevelSelect;
     s16 mgCurrSaveFileNum;
-    struct Controller mgController;
+    struct SM64Controller mgController;
     struct SpawnInfo mgMarioSpawnInfoVal;
     struct Area *mgCurrentArea;
     struct Object *mgCurrentObject;

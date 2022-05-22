@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 static uint32_t s_num_entries = 0;
-static struct Animation *s_libsm64_mario_animations = NULL;
+static struct SM64Animation *s_libsm64_mario_animations = NULL;
 
 #define ANIM_DATA_ADDRESS 0x004EC000
 
@@ -37,8 +37,8 @@ void load_mario_anims_from_rom( uint8_t *rom )
     uint8_t *read_ptr = rom + ANIM_DATA_ADDRESS;
     s_num_entries = read_u32_be( read_ptr );
 
-    s_libsm64_mario_animations = malloc( s_num_entries * sizeof( struct Animation ));
-    struct Animation *anims = s_libsm64_mario_animations;
+    s_libsm64_mario_animations = malloc( s_num_entries * sizeof( struct SM64Animation ));
+    struct SM64Animation *anims = s_libsm64_mario_animations;
 
     for( int i = 0; i < s_num_entries; ++i )
     {

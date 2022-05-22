@@ -20,7 +20,7 @@
 #endif
 
 
-struct Controller
+struct SM64Controller
 {
   /*0x00*/ s16 rawStickX;       //
   /*0x02*/ s16 rawStickY;       //
@@ -49,7 +49,7 @@ typedef uintptr_t GeoLayout;
 typedef uintptr_t LevelScript;
 typedef s16 Movtex;
 typedef s16 MacroObject;
-typedef s16 Collision;
+typedef s16 S16Collision;
 typedef s16 Trajectory;
 typedef s16 PaintingData;
 typedef uintptr_t BehaviorScript;
@@ -100,7 +100,7 @@ struct SurfaceObjectTransform
     s16 aAngleVelRoll;
 };
 
-struct Animation {
+struct SM64Animation {
     /*0x00*/ s16 flags;
     /*0x02*/ s16 animYTransDivisor;
     /*0x04*/ s16 startFrame;
@@ -127,7 +127,7 @@ struct AnimInfo
 {
     /*0x00 0x38*/ s16 animID;
     /*0x02 0x3A*/ s16 animYTrans;
-    /*0x04 0x3C*/ struct Animation *curAnim;
+    /*0x04 0x3C*/ struct SM64Animation *curAnim;
     /*0x08 0x40*/ s16 animFrame;
     /*0x0A 0x42*/ u16 animTimer;
     /*0x0C 0x44*/ s32 animFrameAccelAssist;
@@ -179,7 +179,7 @@ struct Object
 #if !IS_64_BIT
         s16 *asS16P[0x50];
         s32 *asS32P[0x50];
-        struct Animation **asAnims[0x50];
+        struct SM64Animation **asAnims[0x50];
         struct Waypoint *asWaypoint[0x50];
         struct ChainSegment *asChainSegment[0x50];
         struct Object *asObject[0x50];
@@ -192,7 +192,7 @@ struct Object
     union {
         s16 *asS16P[0x50];
         s32 *asS32P[0x50];
-        struct Animation **asAnims[0x50];
+        struct SM64Animation **asAnims[0x50];
         struct Waypoint *asWaypoint[0x50];
         struct ChainSegment *asChainSegment[0x50];
         struct Object *asObject[0x50];
@@ -296,7 +296,7 @@ struct MarioAnimation
 {
     struct MarioAnimDmaRelatedThing *animDmaTable;
     u32 currentAnimAddr; // libsm64: type change
-    struct Animation *targetAnim;
+    struct SM64Animation *targetAnim;
     u8 padding[4];
 };
 
@@ -344,7 +344,7 @@ struct MarioState
     /*0x90*/ struct Area *area;
 //  /*0x94*/ struct PlayerCameraState *statusForCamera;
     /*0x98*/ struct MarioBodyState *marioBodyState;
-    /*0x9C*/ struct Controller *controller;
+    /*0x9C*/ struct SM64Controller *controller;
     /*0xA0*/ struct MarioAnimation *animation;
     /*0xA4*/ u32 collidedObjInteractTypes;
     /*0xA8*/ s16 numCoins;

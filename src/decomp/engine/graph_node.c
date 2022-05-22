@@ -733,9 +733,9 @@ void geo_obj_init_spawninfo(struct GraphNodeObject *graphNode, struct SpawnInfo 
 /**
  * Initialize the animation of an object node
  */
-void geo_obj_init_animation(struct GraphNodeObject *graphNode, struct Animation **animPtrAddr) {
-    struct Animation **animSegmented = segmented_to_virtual(animPtrAddr);
-    struct Animation *anim = segmented_to_virtual(*animSegmented);
+void geo_obj_init_animation(struct GraphNodeObject *graphNode, struct SM64Animation **animPtrAddr) {
+    struct SM64Animation **animSegmented = segmented_to_virtual(animPtrAddr);
+    struct SM64Animation *anim = segmented_to_virtual(*animSegmented);
 
     if (graphNode->animInfo.curAnim != anim) {
         graphNode->animInfo.curAnim = anim;
@@ -748,9 +748,9 @@ void geo_obj_init_animation(struct GraphNodeObject *graphNode, struct Animation 
 /**
  * Initialize the animation of an object node
  */
-void geo_obj_init_animation_accel(struct GraphNodeObject *graphNode, struct Animation **animPtrAddr, u32 animAccel) {
-    struct Animation **animSegmented = segmented_to_virtual(animPtrAddr);
-    struct Animation *anim = segmented_to_virtual(*animSegmented);
+void geo_obj_init_animation_accel(struct GraphNodeObject *graphNode, struct SM64Animation **animPtrAddr, u32 animAccel) {
+    struct SM64Animation **animSegmented = segmented_to_virtual(animPtrAddr);
+    struct SM64Animation *anim = segmented_to_virtual(*animSegmented);
 
     if (graphNode->animInfo.curAnim != anim) {
         graphNode->animInfo.curAnim = anim;
@@ -791,7 +791,7 @@ s32 retrieve_animation_index(s32 frame, u16 **attributes) {
  */
 s16 geo_update_animation_frame(struct AnimInfo *obj, s32 *accelAssist) {
     s32 result;
-    struct Animation *anim;
+    struct SM64Animation *anim;
 
     anim = obj->curAnim;
 
@@ -849,7 +849,7 @@ s16 geo_update_animation_frame(struct AnimInfo *obj, s32 *accelAssist) {
  * animations without lateral translation.
  */
 void geo_retreive_animation_translation(struct GraphNodeObject *obj, Vec3f position) {
-    struct Animation *animation = obj->animInfo.curAnim;
+    struct SM64Animation *animation = obj->animInfo.curAnim;
     u16 *attribute;
     s16 *values;
     s16 frame;

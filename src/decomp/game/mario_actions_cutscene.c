@@ -565,7 +565,7 @@ s32 act_reading_sign(struct MarioState *m) {
 }
 
 s32 act_debug_free_move(struct MarioState *m) {
-    struct Controller *gPlayer1Controller = &gController;
+    struct SM64Controller *gPlayer1Controller = &gController;
 
     struct Surface *surf;
     f32 floorHeight;

@@ -72,7 +72,7 @@ s16 set_mario_animation(struct MarioState *m, s32 targetAnimID) {
     struct Object *o = m->marioObj;
 
     load_mario_animation(m->animation, targetAnimID);
-    struct Animation *targetAnim = m->animation->targetAnim;
+    struct SM64Animation *targetAnim = m->animation->targetAnim;
     //if (load_patchable_table(m->animation, targetAnimID)) {
     //    targetAnim->values = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->values);
     //    targetAnim->index = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->index);
@@ -106,7 +106,7 @@ s16 set_mario_anim_with_accel(struct MarioState *m, s32 targetAnimID, s32 accel)
     struct Object *o = m->marioObj;
 
     load_mario_animation(m->animation, targetAnimID);
-    struct Animation *targetAnim = m->animation->targetAnim;
+    struct SM64Animation *targetAnim = m->animation->targetAnim;
     //if (load_patchable_table(m->animation, targetAnimID)) {
     //    targetAnim->values = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->values);
     //    targetAnim->index = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->index);
@@ -140,7 +140,7 @@ s16 set_mario_anim_with_accel(struct MarioState *m, s32 targetAnimID, s32 accel)
  */
 void set_anim_to_frame(struct MarioState *m, s16 animFrame) {
     struct AnimInfo *animInfo = &m->marioObj->header.gfx.animInfo;
-    struct Animation *curAnim = animInfo->curAnim;
+    struct SM64Animation *curAnim = animInfo->curAnim;
 
     if (animInfo->animAccel) {
         if (curAnim->flags & ANIM_FLAG_FORWARD) {
@@ -161,7 +161,7 @@ s32 is_anim_past_frame(struct MarioState *m, s16 animFrame) {
     s32 isPastFrame;
     s32 acceleratedFrame = animFrame << 0x10;
     struct AnimInfo *animInfo = &m->marioObj->header.gfx.animInfo;
-    struct Animation *curAnim = animInfo->curAnim;
+    struct SM64Animation *curAnim = animInfo->curAnim;
 
     if (animInfo->animAccel) {
         if (curAnim->flags & ANIM_FLAG_FORWARD) {
@@ -192,7 +192,7 @@ s16 find_mario_anim_flags_and_translation(struct Object *obj, s32 yaw, Vec3s tra
     f32 dx;
     f32 dz;
 
-    struct Animation *curAnim = (void *) obj->header.gfx.animInfo.curAnim;
+    struct SM64Animation *curAnim = (void *) obj->header.gfx.animInfo.curAnim;
     s16 animFrame = geo_update_animation_frame(&obj->header.gfx.animInfo, NULL);
     u16 *animIndex = segmented_to_virtual((void *) curAnim->index);
     s16 *animValues = segmented_to_virtual((void *) curAnim->values);
@@ -1300,7 +1300,7 @@ void update_mario_button_inputs(struct MarioState *m) {
  * Updates the joystick intended magnitude.
  */
 void update_mario_joystick_inputs(struct MarioState *m) {
-    struct Controller *controller = m->controller;
+    struct SM64Controller *controller = m->controller;
     f32 mag = ((controller->stickMag / 64.0f) * (controller->stickMag / 64.0f)) * 64.0f;
 
     if (m->squishTimer == 0) {
