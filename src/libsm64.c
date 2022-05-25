@@ -423,6 +423,14 @@ SM64_LIB_FN void sm64_set_mario_water_level(int32_t marioId, signed int level)
 	gMarioState->waterLevel = level;
 }
 
+SM64_LIB_FN signed int sm64_get_mario_water_level(int32_t marioId)
+{
+	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
+    global_state_bind( globalState );
+	
+	return gMarioState->waterLevel;
+}
+
 SM64_LIB_FN void sm64_set_mario_floor_override(int32_t marioId, uint16_t terrain, int16_t floorType)
 {
 	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
