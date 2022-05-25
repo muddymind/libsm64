@@ -448,6 +448,14 @@ SM64_LIB_FN void sm64_mario_heal(int32_t marioId, uint8_t healCounter)
 	gMarioState->healCounter += healCounter;
 }
 
+SM64_LIB_FN void sm64_mario_kill(int32_t marioId)
+{
+	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
+    global_state_bind( globalState );
+	
+	gMarioState->health = 0xFF;
+}
+
 SM64_LIB_FN uint32_t sm64_surface_object_create( const struct SM64SurfaceObject *surfaceObject )
 {
     uint32_t id = surfaces_load_object( surfaceObject );
