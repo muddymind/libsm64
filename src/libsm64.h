@@ -126,7 +126,6 @@ extern SM64_LIB_FN struct SM64AnimInfo* sm64_mario_get_anim_info( int32_t marioI
 extern SM64_LIB_FN void sm64_mario_anim_tick( int32_t marioId, uint32_t stateFlags, struct SM64AnimInfo* animInfo, struct SM64MarioGeometryBuffers *outBuffers, int16_t rot[3] );
 extern SM64_LIB_FN void sm64_mario_delete( int32_t marioId );
 
-extern SM64_LIB_FN uint16_t sm64_get_mario_actiontimer(int32_t marioId);
 extern SM64_LIB_FN void sm64_set_mario_action(int32_t marioId, uint32_t action);
 extern SM64_LIB_FN void sm64_set_mario_state(int32_t marioId, uint32_t flags);
 extern SM64_LIB_FN void sm64_set_mario_position(int32_t marioId, float x, float y, float z);
