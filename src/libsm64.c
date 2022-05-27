@@ -399,6 +399,14 @@ SM64_LIB_FN void sm64_set_mario_forward_velocity(int32_t marioId, float vel)
 	gMarioState->forwardVel = vel;
 }
 
+SM64_LIB_FN uint16_t sm64_get_mario_actiontimer(int32_t marioId)
+{
+	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
+    global_state_bind( globalState );
+
+	return gMarioState->actionTimer;
+}
+
 SM64_LIB_FN void sm64_set_mario_action(int32_t marioId, uint32_t action)
 {
 	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
