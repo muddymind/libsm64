@@ -9,6 +9,8 @@
 
 #include "../src/libsm64.h"
 
+#define SDL_MAIN_HANDLED
+
 #include "cglm.h"
 #include "ns_clock.h"
 #include "level.h"
@@ -395,7 +397,7 @@ int main( void )
     sm64_global_terminate();
     sm64_global_init( rom, texture, NULL );
     sm64_static_surfaces_load( surfaces, surfaces_count );
-    uint32_t marioId = sm64_mario_create( 0, 1000, 0 );
+    uint32_t marioId = sm64_mario_create( spawn[0], spawn[1], spawn[2], 0, 0, 0, 0 );
 
     free( rom );
 
@@ -424,23 +426,79 @@ int main( void )
     {
         uint64_t frameTopTime = ns_clock();
 
+		/*
         SDL_GameController *controller = context_get_controller();
         float x_axis = read_axis( SDL_GameControllerGetAxis( controller, SDL_CONTROLLER_AXIS_LEFTX ));
         float y_axis = read_axis( SDL_GameControllerGetAxis( controller, SDL_CONTROLLER_AXIS_LEFTY ));
-        float x0_axis = read_axis( SDL_GameControllerGetAxis( controller, SDL_CONTROLLER_AXIS_RIGHTX ));
+        float x0_axis = read_axis( SDL_GameControllerGetAxis( controller, SDL_CONTROLLER_AXIS_RIGHTX ));*/
+
+		const Uint8* state = SDL_GetKeyboardState(NULL);
+
+		float x0_axis = state[SDL_SCANCODE_LSHIFT] ? 1 : state[SDL_SCANCODE_RSHIFT] ? -1 : 0;
+
+		float dir;
+		float spd = 0;
+		if (state[SDL_SCANCODE_UP] && state[SDL_SCANCODE_RIGHT])
+		{
+			dir = -M_PI * 0.25f;
+			spd = 1;
+		}
+		else if (state[SDL_SCANCODE_UP] && state[SDL_SCANCODE_LEFT])
+		{
+			dir = -M_PI * 0.75f;
+			spd = 1;
+		}
+		else if (state[SDL_SCANCODE_DOWN] && state[SDL_SCANCODE_RIGHT])
+		{
+			dir = M_PI * 0.25f;
+			spd = 1;
+		}
+		else if (state[SDL_SCANCODE_DOWN] && state[SDL_SCANCODE_LEFT])
+		{
+			dir = M_PI * 0.75f;
+			spd = 1;
+		}
+		else if (state[SDL_SCANCODE_UP])
+		{
+			dir = -M_PI * 0.5f;
+			spd = 1;
+		}
+		else if (state[SDL_SCANCODE_DOWN])
+		{
+			dir = M_PI * 0.5f;
+			spd = 1;
+		}
+		else if (state[SDL_SCANCODE_LEFT])
+		{
+			dir = M_PI;
+			spd = 1;
+		}
+		else if (state[SDL_SCANCODE_RIGHT])
+		{
+			dir = 0;
+			spd = 1;
+		}
 
         cameraRot += 0.1f * x0_axis;
         cameraPos[0] = marioState.position[0] + 1000.0f * cosf( cameraRot );
         cameraPos[1] = marioState.position[1] + 200.0f;
         cameraPos[2] = marioState.position[2] + 1000.0f * sinf( cameraRot );
 
+		/*
         marioInputs.buttonA = SDL_GameControllerGetButton( controller, 0 );
         marioInputs.buttonB = SDL_GameControllerGetButton( controller, 2 );
         marioInputs.buttonZ = SDL_GameControllerGetButton( controller, 9 );
+		*/
+		marioInputs.buttonA = state[SDL_SCANCODE_X];
+        marioInputs.buttonB = state[SDL_SCANCODE_C];
+        marioInputs.buttonZ = state[SDL_SCANCODE_Z];
+
         marioInputs.camLookX = marioState.position[0] - cameraPos[0];
         marioInputs.camLookZ = marioState.position[2] - cameraPos[2];
-        marioInputs.stickX = x_axis;
-        marioInputs.stickY = y_axis;
+        //marioInputs.stickX = x_axis;
+        //marioInputs.stickY = y_axis;
+		marioInputs.stickX = spd * cosf(dir);
+		marioInputs.stickY = spd * sinf(dir);
 
         sm64_mario_tick( marioId, &marioInputs, &marioState, &marioGeometry );
 
