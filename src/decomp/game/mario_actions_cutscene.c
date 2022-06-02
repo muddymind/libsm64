@@ -811,28 +811,28 @@ s32 act_unlocking_key_door(struct MarioState *m) {
 //  m->pos[0] = m->usedObj->oPosX + coss(m->faceAngle[1]) * 75.0f;
 //  m->pos[2] = m->usedObj->oPosZ + sins(m->faceAngle[1]) * 75.0f;
 
-//  if (m->actionArg & 2) {
-//      m->faceAngle[1] += 0x8000;
-//  }
+    if (m->actionArg & 2) {
+        m->faceAngle[1] += 0x8000;
+    }
 
-//  if (m->actionTimer == 0) {
+    if (m->actionTimer == 0) {
 //      spawn_obj_at_mario_rel_yaw(m, MODEL_BOWSER_KEY_CUTSCENE, bhvBowserKeyUnlockDoor, 0);
-//      set_mario_animation(m, MARIO_ANIM_UNLOCK_DOOR);
-//  }
+        set_mario_animation(m, MARIO_ANIM_UNLOCK_DOOR);
+    }
 
-//  switch (m->marioObj->header.gfx.animInfo.animFrame) {
-//      case 79:
-//          play_sound(SOUND_GENERAL_DOOR_INSERT_KEY, m->marioObj->header.gfx.cameraToObject);
-//          break;
-//      case 111:
-//          play_sound(SOUND_GENERAL_DOOR_TURN_KEY, m->marioObj->header.gfx.cameraToObject);
-//          break;
-//  }
+    switch (m->marioObj->header.gfx.animInfo.animFrame) {
+        case 79:
+            play_sound(SOUND_GENERAL_DOOR_INSERT_KEY, m->marioObj->header.gfx.cameraToObject);
+            break;
+        case 111:
+            play_sound(SOUND_GENERAL_DOOR_TURN_KEY, m->marioObj->header.gfx.cameraToObject);
+            break;
+    }
 
-//  update_mario_pos_for_anim(m);
-//  stop_and_set_height_to_floor(m);
+    //update_mario_pos_for_anim(m);
+    stop_and_set_height_to_floor(m);
 
-//  if (is_anim_at_end(m)) {
+    if (is_anim_at_end(m)) {
 //      if (m->usedObj->oBehParams >> 24 == 1) {
 //          save_file_set_flags(SAVE_FLAG_UNLOCKED_UPSTAIRS_DOOR);
 //          save_file_clear_flags(SAVE_FLAG_HAVE_KEY_2);
@@ -840,10 +840,10 @@ s32 act_unlocking_key_door(struct MarioState *m) {
 //          save_file_set_flags(SAVE_FLAG_UNLOCKED_BASEMENT_DOOR);
 //          save_file_clear_flags(SAVE_FLAG_HAVE_KEY_1);
 //      }
-//      set_mario_action(m, ACT_WALKING, 0);
-//  }
+        set_mario_action(m, ACT_WALKING, 0);
+    }
 
-//  m->actionTimer++;
+    m->actionTimer++;
     return FALSE;
 }
 
