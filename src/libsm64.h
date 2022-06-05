@@ -127,6 +127,7 @@ extern SM64_LIB_FN void sm64_mario_anim_tick( int32_t marioId, uint32_t stateFla
 extern SM64_LIB_FN void sm64_mario_delete( int32_t marioId );
 
 extern SM64_LIB_FN void sm64_set_mario_action(int32_t marioId, uint32_t action);
+extern SM64_LIB_FN void sm64_set_mario_animation(int32_t marioId, int32_t animID);
 extern SM64_LIB_FN void sm64_set_mario_state(int32_t marioId, uint32_t flags);
 extern SM64_LIB_FN void sm64_set_mario_position(int32_t marioId, float x, float y, float z);
 extern SM64_LIB_FN void sm64_set_mario_angle(int32_t marioId, int16_t x, int16_t y, int16_t z);
