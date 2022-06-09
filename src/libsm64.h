@@ -141,6 +141,7 @@ extern SM64_LIB_FN void sm64_mario_take_damage(int32_t marioId, uint32_t damage,
 extern SM64_LIB_FN void sm64_mario_heal(int32_t marioId, uint8_t healCounter);
 extern SM64_LIB_FN void sm64_mario_set_health(int32_t marioId, uint16_t health);
 extern SM64_LIB_FN void sm64_mario_kill(int32_t marioId);
+extern SM64_LIB_FN bool sm64_mario_attack(int32_t marioId, float x, float y, float z, float hitboxHeight);
 
 extern SM64_LIB_FN uint32_t sm64_surface_object_create( const struct SM64SurfaceObject *surfaceObject );
 extern SM64_LIB_FN void sm64_surface_object_move( uint32_t objectId, const struct SM64ObjectTransform *transform );

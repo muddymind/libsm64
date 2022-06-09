@@ -480,6 +480,14 @@ SM64_LIB_FN void sm64_mario_kill(int32_t marioId)
 	gMarioState->health = 0xFF;
 }
 
+SM64_LIB_FN bool sm64_mario_attack(int32_t marioId, float x, float y, float z, float hitboxHeight)
+{
+	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
+    global_state_bind( globalState );
+	
+	return fake_interact_bounce_top(gMarioState, x, y, z, hitboxHeight);
+}
+
 SM64_LIB_FN uint32_t sm64_surface_object_create( const struct SM64SurfaceObject *surfaceObject )
 {
     uint32_t id = surfaces_load_object( surfaceObject );
