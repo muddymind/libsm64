@@ -16,6 +16,7 @@
 #include <sm64.h>
 #include <mario_animation_ids.h>
 #include <mario_geo_switch_case_ids.h>
+#include <seq_ids.h>
 #include "decomp/shim.h"
 #include "decomp/memory.h"
 #include "decomp/global_state.h"
@@ -489,6 +490,53 @@ SM64_LIB_FN void sm64_mario_kill(int32_t marioId)
     global_state_bind( globalState );
 	
 	gMarioState->health = 0xFF;
+}
+
+SM64_LIB_FN void sm64_mario_interact_cap(int32_t marioId, uint32_t capFlag, uint16_t capTime, uint8_t playMusic)
+{
+	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
+    global_state_bind( globalState );
+	
+	uint16_t capMusic = 0;
+	if(gMarioState->action != ACT_GETTING_BLOWN && capFlag != 0)
+	{
+		gMarioState->flags &= ~MARIO_CAP_ON_HEAD & ~MARIO_CAP_IN_HAND;
+		gMarioState->flags |= capFlag;
+		
+		switch(capFlag)
+		{
+			case MARIO_VANISH_CAP:
+				if(capTime == 0) capTime = 600;
+				capMusic = SEQUENCE_ARGS(4, SEQ_EVENT_POWERUP);
+				break;
+			case MARIO_METAL_CAP:
+				if(capTime == 0) capTime = 600;
+				capMusic = SEQUENCE_ARGS(4, SEQ_EVENT_METAL_CAP);
+				break;
+			case MARIO_WING_CAP:
+				if(capTime == 0) capTime = 1800;
+				capMusic = SEQUENCE_ARGS(4, SEQ_EVENT_POWERUP);
+				break;
+		}
+		
+		if (capTime > gMarioState->capTimer) {
+			gMarioState->capTimer = capTime;
+		}
+		
+		if ((gMarioState->action & ACT_FLAG_IDLE) || gMarioState->action == ACT_WALKING) {
+			gMarioState->flags |= MARIO_CAP_IN_HAND;
+			set_mario_action(gMarioState, ACT_PUTTING_ON_CAP, 0);
+		} else {
+			gMarioState->flags |= MARIO_CAP_ON_HEAD;
+		}
+
+		play_sound(SOUND_MENU_STAR_SOUND, gMarioState->marioObj->header.gfx.cameraToObject);
+		play_sound(SOUND_MARIO_HERE_WE_GO, gMarioState->marioObj->header.gfx.cameraToObject);
+
+		if (playMusic != 0 && capMusic != 0) {
+			play_cap_music(capMusic);
+		}
+	}
 }
 
 SM64_LIB_FN bool sm64_mario_attack(int32_t marioId, float x, float y, float z, float hitboxHeight)
