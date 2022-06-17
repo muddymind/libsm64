@@ -54,6 +54,7 @@ struct SM64MarioState
 	uint32_t flags;
 	uint32_t particleFlags;
 	int16_t invincTimer;
+	int16_t burnTimer;
 };
 
 struct SM64MarioGeometryBuffers
@@ -127,6 +128,7 @@ extern SM64_LIB_FN void sm64_mario_anim_tick( int32_t marioId, uint32_t stateFla
 extern SM64_LIB_FN void sm64_mario_delete( int32_t marioId );
 
 extern SM64_LIB_FN void sm64_set_mario_action(int32_t marioId, uint32_t action);
+extern SM64_LIB_FN void sm64_set_mario_action_arg(int32_t marioId, uint32_t action, uint32_t actionArg);
 extern SM64_LIB_FN void sm64_set_mario_animation(int32_t marioId, int32_t animID);
 extern SM64_LIB_FN void sm64_set_mario_state(int32_t marioId, uint32_t flags);
 extern SM64_LIB_FN void sm64_set_mario_position(int32_t marioId, float x, float y, float z);

@@ -17,6 +17,7 @@
 #include <mario_animation_ids.h>
 #include <mario_geo_switch_case_ids.h>
 #include <seq_ids.h>
+#include <object_fields.h>
 #include "decomp/shim.h"
 #include "decomp/memory.h"
 #include "decomp/global_state.h"
@@ -333,6 +334,7 @@ SM64_LIB_FN void sm64_mario_tick( int32_t marioId, const struct SM64MarioInputs 
 	outState->flags = gMarioState->flags;
 	outState->particleFlags = gMarioState->particleFlags;
 	outState->invincTimer = gMarioState->invincTimer;
+	outState->burnTimer = 160 - gMarioState->marioObj->oMarioBurnTimer;
 }
 
 SM64_LIB_FN void sm64_mario_delete( int32_t marioId )
@@ -417,6 +419,14 @@ SM64_LIB_FN void sm64_set_mario_action(int32_t marioId, uint32_t action)
     global_state_bind( globalState );
 	
 	set_mario_action( gMarioState, action, 0);
+}
+
+SM64_LIB_FN void sm64_set_mario_action_arg(int32_t marioId, uint32_t action, uint32_t actionArg)
+{
+	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
+    global_state_bind( globalState );
+	
+	set_mario_action( gMarioState, action, actionArg);
 }
 
 SM64_LIB_FN void sm64_set_mario_animation(int32_t marioId, int32_t animID)
