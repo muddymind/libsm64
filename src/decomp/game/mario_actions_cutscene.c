@@ -1,4 +1,5 @@
 
+#include <stdio.h>
 #include <math.h>
 
 #include "../include/PR/ultratypes.h"
@@ -848,44 +849,73 @@ s32 act_unlocking_key_door(struct MarioState *m) {
 }
 
 s32 act_unlocking_star_door(struct MarioState *m) {
-//  switch (m->actionState) {
-//      case 0:
-//          m->faceAngle[1] = m->usedObj->oMoveAngleYaw;
-//          if (m->actionArg & 2) {
-//              m->faceAngle[1] += 0x8000;
-//          }
-//          m->marioObj->oMarioReadingSignDPosX = m->pos[0];
-//          m->marioObj->oMarioReadingSignDPosZ = m->pos[2];
-//          set_mario_animation(m, MARIO_ANIM_SUMMON_STAR);
-//          m->actionState++;
-//          break;
-//      case 1:
-//          if (is_anim_at_end(m)) {
-//              spawn_object(m->marioObj, MODEL_STAR, bhvUnlockDoorStar);
-//              m->actionState++;
-//          }
-//          break;
-//      case 2:
-//          if (m->actionTimer++ == 70) {
-//              set_mario_animation(m, MARIO_ANIM_RETURN_STAR_APPROACH_DOOR);
-//              m->actionState++;
-//          }
-//          break;
-//      case 3:
-//          if (is_anim_at_end(m)) {
-//              save_file_set_flags(get_door_save_file_flag(m->usedObj));
-//              set_mario_action(m, ACT_READING_AUTOMATIC_DIALOG, DIALOG_038);
-//          }
-//          break;
-//  }
+	static int starSnd = 6;
+	switch (m->actionState) {
+		case 0:
+	//          m->faceAngle[1] = m->usedObj->oMoveAngleYaw;
+			if (m->actionArg & 2) {
+				m->faceAngle[1] += 0x8000;
+			}
+			m->marioObj->oMarioReadingSignDPosX = m->pos[0];
+			m->marioObj->oMarioReadingSignDPosZ = m->pos[2];
+			//set_mario_animation(m, MARIO_ANIM_SUMMON_STAR);
+			set_mario_animation(m, MARIO_ANIM_CREDITS_RAISE_HAND);
+			m->marioObj->header.gfx.animInfo.animFrame = 60;
+			m->actionState++;
+			break;
+		case 1:
+			if (is_anim_at_end(m)) {
+				//spawn_object(m->marioObj, MODEL_STAR, bhvUnlockDoorStar);
+				m->actionState++;
+				starSnd = 12;
+			}
+			break;
+		case 2:
+			// modified state to play the star sound, since apparently the UnlockDoorStar behavior did it but it's not in libsm64
+			if (m->actionTimer % starSnd == 0)
+			{
+				play_sound(SOUND_GENERAL_SHORT_STAR, m->marioObj->header.gfx.cameraToObject);
+				if (starSnd >= 5)
+				{
+					starSnd--;
+					m->actionTimer = 0;
+				}
+				else
+				{
+					play_sound(SOUND_MENU_STAR_SOUND, m->marioObj->header.gfx.cameraToObject);
+					//set_mario_animation(m, MARIO_ANIM_RETURN_STAR_APPROACH_DOOR);
+					set_mario_animation(m, MARIO_ANIM_CREDITS_LOWER_HAND);
+					m->actionState++;
+					break;
+				}
+			}
+			m->actionTimer++;
 
-//  m->pos[0] = m->marioObj->oMarioReadingSignDPosX;
-//  m->pos[2] = m->marioObj->oMarioReadingSignDPosZ;
+			// original code
+			/*
+			if (m->actionTimer++ == 70) {
+				play_sound(SOUND_MENU_STAR_SOUND, m->marioObj->header.gfx.cameraToObject);
+				set_mario_animation(m, MARIO_ANIM_RETURN_STAR_APPROACH_DOOR);
+				m->actionState++;
+			}
+			*/
+			break;
+		case 3:
+			if (is_anim_at_end(m)) {
+	//              save_file_set_flags(get_door_save_file_flag(m->usedObj));
+	//              set_mario_action(m, ACT_READING_AUTOMATIC_DIALOG, DIALOG_038);
+				set_mario_action(m, ACT_IDLE, 0);
+			}
+			break;
+	}
 
-//  update_mario_pos_for_anim(m);
-//  stop_and_set_height_to_floor(m);
+	m->pos[0] = m->marioObj->oMarioReadingSignDPosX;
+	m->pos[2] = m->marioObj->oMarioReadingSignDPosZ;
 
-    return FALSE;
+	//  update_mario_pos_for_anim(m);
+	stop_and_set_height_to_floor(m);
+
+	return FALSE;
 }
 
 s32 act_entering_star_door(struct MarioState *m) {
