@@ -6,7 +6,7 @@ CFLAGS  := -g -Wall -fPIC -DSM64_LIB_EXPORT -DVERSION_US -DNO_SEGMENTED_MEMORY -
 LDFLAGS := -lm -shared -lpthread
 ENDFLAGS := -fPIC
 ifeq ($(OS),Windows_NT)
-LDFLAGS := $(LDFLAGS) -mwindows
+LDFLAGS := $(LDFLAGS)
 ENDFLAGS := -static -lole32 -lstdc++
 endif
 
@@ -68,7 +68,7 @@ endif
 
 $(TEST_FILE): $(LIB_FILE) $(TEST_OBJS)
 ifeq ($(OS),Windows_NT)
-	$(CC) -o $@ $(TEST_OBJS) $(LIB_FILE) `sdl2-config --cflags --libs` -lglew32 -lglu32 -lopengl32 -lSDL2 -lSDL2main -lm
+	$(CC) -o $@ $(TEST_OBJS) $(LIB_FILE) -lglew32 -lglu32 -lopengl32 -lSDL2 -lSDL2main -lm
 else
 	$(CC) -o $@ $(TEST_OBJS) $(LIB_FILE) -lGLEW -lGL -lSDL2 -lSDL2main -lm
 endif
