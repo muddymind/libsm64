@@ -49,6 +49,7 @@ struct SM64MarioState
     float position[3];
     float velocity[3];
     float faceAngle;
+    float pitchAngle;
     int16_t health;
 	uint32_t action;
 	uint32_t flags;
