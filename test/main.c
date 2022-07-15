@@ -8,6 +8,7 @@
 #include <time.h>
 
 #include "../src/libsm64.h"
+#include "../src/decomp/include/seq_ids.h"
 
 #define SDL_MAIN_HANDLED
 
@@ -421,6 +422,8 @@ int main( void )
     marioGeometry.color    = malloc( sizeof(float) * 9 * SM64_GEO_MAX_TRIANGLES );
     marioGeometry.normal   = malloc( sizeof(float) * 9 * SM64_GEO_MAX_TRIANGLES );
     marioGeometry.uv       = malloc( sizeof(float) * 6 * SM64_GEO_MAX_TRIANGLES );
+
+	sm64_play_music(0, ((0 << 8) | SEQ_LEVEL_UNDERGROUND), 0);
 
     do
     {
