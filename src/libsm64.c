@@ -504,6 +504,14 @@ SM64_LIB_FN void sm64_mario_set_health(int32_t marioId, uint16_t health)
 	gMarioState->health = health;
 }
 
+SM64_LIB_FN uint16_t sm64_mario_get_health(int32_t marioId)
+{
+	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
+    global_state_bind( globalState );
+	
+	return gMarioState->health;
+}
+
 SM64_LIB_FN void sm64_mario_kill(int32_t marioId)
 {
 	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
