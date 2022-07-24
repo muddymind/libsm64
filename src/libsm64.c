@@ -326,9 +326,11 @@ SM64_LIB_FN void sm64_mario_tick( int32_t marioId, const struct SM64MarioInputs 
 
     gAreaUpdateCounter++;
 
+	int i;
     outState->health = gMarioState->health;
     vec3f_copy( outState->position, gMarioState->pos );
     vec3f_copy( outState->velocity, gMarioState->vel );
+    for (i=0; i<3; i++) outState->angleVel[i] = (float)gMarioState->angleVel[i] / 32768.0f * 3.14159f;
     outState->faceAngle = (float)gMarioState->faceAngle[1] / 32768.0f * 3.14159f;
     outState->pitchAngle = (float)gMarioState->faceAngle[0] / 32768.0f * 3.14159f;
 	outState->action = gMarioState->action;
