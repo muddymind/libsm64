@@ -86,6 +86,7 @@ s32 check_fall_damage(struct MarioState *m, u32 hardFallAction) {
         if (m->vel[1] < -55.0f) {
             if (fallHeight > 3000.0f) {
                 m->hurtCounter += (m->flags & MARIO_CAP_ON_HEAD) ? 16 : 24;
+                m->fallDamage = (m->flags & MARIO_CAP_ON_HEAD) ? 16 : 24;
 #ifdef VERSION_SH
                 queue_rumble_data(5, 80);
 #endif
@@ -94,6 +95,7 @@ s32 check_fall_damage(struct MarioState *m, u32 hardFallAction) {
                 return drop_and_set_mario_action(m, hardFallAction, 4);
             } else if (fallHeight > damageHeight && !mario_floor_is_slippery(m)) {
                 m->hurtCounter += (m->flags & MARIO_CAP_ON_HEAD) ? 8 : 12;
+                m->fallDamage = (m->flags & MARIO_CAP_ON_HEAD) ? 8 : 12;
                 m->squishTimer = 30;
 #ifdef VERSION_SH
                 queue_rumble_data(5, 80);

@@ -302,6 +302,8 @@ SM64_LIB_FN void sm64_mario_tick( int32_t marioId, const struct SM64MarioInputs 
 	struct GlobalState *state = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
     global_state_bind( state );
 
+    gMarioState->fallDamage = 0;
+
     update_button( inputs->buttonA, A_BUTTON );
     update_button( inputs->buttonB, B_BUTTON );
     update_button( inputs->buttonZ, Z_TRIG );
@@ -338,6 +340,7 @@ SM64_LIB_FN void sm64_mario_tick( int32_t marioId, const struct SM64MarioInputs 
 	outState->particleFlags = gMarioState->particleFlags;
 	outState->invincTimer = gMarioState->invincTimer;
 	outState->burnTimer = 160 - gMarioState->marioObj->oMarioBurnTimer;
+	outState->fallDamage = gMarioState->fallDamage;
 }
 
 SM64_LIB_FN void sm64_mario_delete( int32_t marioId )
