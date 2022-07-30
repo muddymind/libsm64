@@ -13,7 +13,6 @@
 #define SDL_MAIN_HANDLED
 
 #include "cglm.h"
-#include "ns_clock.h"
 #include "level.h"
 #include "context.h"
 
@@ -410,10 +409,6 @@ int main( void )
     context_init( "libsm64", WINDOW_WIDTH, WINDOW_HEIGHT );
     render_state_init( &renderState, texture );
 
-    struct timespec ts;
-    ts.tv_sec = 0;
-    ts.tv_nsec = 0;
-
     struct SM64MarioInputs marioInputs;
     struct SM64MarioState marioState;
     struct SM64MarioGeometryBuffers marioGeometry;
@@ -427,7 +422,7 @@ int main( void )
 
     do
     {
-        uint64_t frameTopTime = ns_clock();
+		Uint64 start = SDL_GetPerformanceCounter();
 
 		/*
         SDL_GameController *controller = context_get_controller();
@@ -507,8 +502,11 @@ int main( void )
 
         render_draw( &renderState, cameraPos, &marioState, &marioGeometry );
 
-        ts.tv_nsec = 33333333 - (ns_clock() - frameTopTime);
-        nanosleep( &ts, &ts );
+		printf("%.2f %.2f %.2f\n", marioState.position[0], marioState.position[1], marioState.position[2]);
+
+		Uint64 end = SDL_GetPerformanceCounter();
+		float elapsed = (end-start) / (float)SDL_GetPerformanceCounter() * 1000;
+		SDL_Delay((1.f/30*1000) - elapsed);
     }
     while( context_flip_frame_poll_events() );
 
