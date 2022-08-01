@@ -1324,8 +1324,10 @@ void update_mario_geometry_inputs(struct MarioState *m) {
     f32 gasLevel;
     f32 ceilToFloorDist;
 
-    f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 60.0f, 50.0f);
-    f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 30.0f, 24.0f);
+    // We want to allow Mario to be able to climb the same steps lara would. 
+    // We will only retain big wall check and increase it's displacement to 65 units to allow Mario to reach the same height.
+    f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 65.0f, 50.0f);
+    //f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 30.0f, 24.0f);
 
     m->floorHeight = find_floor(m->pos[0], m->pos[1], m->pos[2], &m->floor);
 
