@@ -553,6 +553,10 @@ s32 act_ledge_grab(struct MarioState *m) {
     f32 heightAboveFloor;
     s16 intendedDYaw = m->intendedYaw - m->faceAngle[1];
     s32 hasSpaceForMario = (m->ceilHeight - m->floorHeight >= 160.0f);
+    bool shimmy = false;
+    f32 shimmyVelocity = 4.0f;
+    s32 StationaryAnimVelocity = 0x10000;
+    s32 shimmyAnimVelocity = 0x55000;
 
     if (m->actionTimer < 10) {
         m->actionTimer++;
@@ -582,8 +586,20 @@ s32 act_ledge_grab(struct MarioState *m) {
 #else
     if (m->actionTimer == 10 && (m->input & INPUT_NONZERO_ANALOG))
 #endif
-    {
-        if (intendedDYaw >= -0x4000 && intendedDYaw <= 0x4000) {
+    {        
+        if(intendedDYaw <= 0x6000 && intendedDYaw >= 0x2000) { 
+            //shimmy left
+            shimmy = true;
+            m->pos[0] += coss(m->faceAngle[1]) * ( m->faceAngle[1]>0 ? -shimmyVelocity: shimmyVelocity );
+            m->pos[2] += sins(m->faceAngle[1]) * ( m->faceAngle[1]>0 ? -shimmyVelocity: shimmyVelocity );
+        }
+        else if(intendedDYaw <= -0x2000 && intendedDYaw >= -0x6000) {
+            //shimmy right
+            shimmy = true;
+            m->pos[0] += coss(m->faceAngle[1]) * ( m->faceAngle[1]>0 ? shimmyVelocity: -shimmyVelocity );
+            m->pos[2] += sins(m->faceAngle[1]) * ( m->faceAngle[1]>0 ? shimmyVelocity: -shimmyVelocity );
+        }
+        else if (intendedDYaw >= -0x4000 && intendedDYaw <= 0x4000) {
             if (hasSpaceForMario) {
                 return set_mario_action(m, ACT_LEDGE_CLIMB_SLOW_1, 0);
             }
@@ -602,7 +618,13 @@ s32 act_ledge_grab(struct MarioState *m) {
     }
 
     stop_and_set_height_to_floor(m);
-    set_mario_animation(m, MARIO_ANIM_IDLE_ON_LEDGE);
+
+    if(!shimmy){
+        set_mario_anim_with_accel(m, MARIO_ANIM_IDLE_ON_LEDGE, StationaryAnimVelocity);
+    }
+    else {
+        set_mario_anim_with_accel(m, MARIO_ANIM_IDLE_ON_LEDGE, shimmyAnimVelocity);
+    }
 
     return FALSE;
 }
