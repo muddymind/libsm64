@@ -243,7 +243,7 @@ u32 fake_determine_interaction(struct MarioState *m, float x, float y, float z) 
 }
 
 void fake_bounce_off_object(struct MarioState *m, float x, float y, float z, float hitboxHeight, f32 velY) {
-    m->pos[1] = y + hitboxHeight;
+    //m->pos[1] = y + hitboxHeight;
     m->vel[1] = velY;
 
     m->flags &= ~MARIO_UNKNOWN_08;
