@@ -554,9 +554,9 @@ s32 act_ledge_grab(struct MarioState *m) {
     s16 intendedDYaw = m->intendedYaw - m->faceAngle[1];
     s32 hasSpaceForMario = (m->ceilHeight - m->floorHeight >= 160.0f);
     bool shimmy = false;
-    f32 shimmyVelocity = 4.0f;
-    s32 StationaryAnimVelocity = 0x10000;
-    s32 shimmyAnimVelocity = 0x55000;
+    const f32 shimmyVelocity = 4.0f;
+    const s32 StationaryAnimVelocity = 0x10000;
+    const s32 shimmyAnimVelocity = 0x55000;
 
     if (m->actionTimer < 10) {
         m->actionTimer++;
@@ -586,24 +586,29 @@ s32 act_ledge_grab(struct MarioState *m) {
 #else
     if (m->actionTimer == 10 && (m->input & INPUT_NONZERO_ANALOG))
 #endif
-    {        
-        if(intendedDYaw <= 0x6000 && intendedDYaw >= 0x2000) { 
-            //shimmy left
+    {
+        // We need to determine if the player intends to shimmy, climb or fall down with the direction inputs.
+        // These are the tolerance intervals for shimmy action since the camera can float by a lot.
+        // Widening the angles will make it easier to remain in shimmy action at extreme camera angles
+        // but will make it harder for the player to climb up or down.
+        if( (intendedDYaw <= -0x2000 && intendedDYaw >= -0x6000) || (intendedDYaw <= 0x6000 && intendedDYaw >= 0x2000) ) {
+            // Shimmy time!
             shimmy = true;
-            m->pos[0] += coss(m->faceAngle[1]) * ( m->faceAngle[1]>0 ? -shimmyVelocity: shimmyVelocity );
-            m->pos[2] += sins(m->faceAngle[1]) * ( m->faceAngle[1]>0 ? -shimmyVelocity: shimmyVelocity );
+
+            // We need to determine which way is left direction from the camera perspective.
+            bool left = (m->faceAngle[1] >= 0 && intendedDYaw >= 0) || (m->faceAngle[1] < 0 && intendedDYaw >= 0);
+
+            m->pos[0] += coss(m->faceAngle[1]) * ( left ? shimmyVelocity : -shimmyVelocity );
+            m->pos[2] += sins(m->faceAngle[1]) * ( left ? -shimmyVelocity : shimmyVelocity );
         }
-        else if(intendedDYaw <= -0x2000 && intendedDYaw >= -0x6000) {
-            //shimmy right
-            shimmy = true;
-            m->pos[0] += coss(m->faceAngle[1]) * ( m->faceAngle[1]>0 ? shimmyVelocity: -shimmyVelocity );
-            m->pos[2] += sins(m->faceAngle[1]) * ( m->faceAngle[1]>0 ? shimmyVelocity: -shimmyVelocity );
-        }
+        // If the angle is outside of shimmy but clearly up front then we try to trigger the edge climbing action.
         else if (intendedDYaw >= -0x4000 && intendedDYaw <= 0x4000) {
             if (hasSpaceForMario) {
                 return set_mario_action(m, ACT_LEDGE_CLIMB_SLOW_1, 0);
             }
-        } else {
+        } 
+        // Failing all previous checks then we assume the player wants to fall down.
+        else {
             return let_go_of_ledge(m);
         }
     }
