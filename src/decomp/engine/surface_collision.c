@@ -3,6 +3,31 @@
 #include "../include/surface_terrains.h"
 #include "../../load_surfaces.h"
 
+struct Surface **get_all_geometry(int *count){
+
+    uint32_t numberOfSurfaces=0;
+
+    uint32_t groupCount = loaded_surface_iter_group_count();
+    for( int i = 0; i < groupCount; ++i ) {
+        uint32_t surfCount = loaded_surface_iter_group_size( i );
+        numberOfSurfaces+=surfCount;
+    }
+
+    struct Surface **allSurfaces = (struct Surface **)malloc(sizeof(struct Surface *)*numberOfSurfaces);
+
+    uint32_t sindex=0;
+    for( int i = 0; i < groupCount; ++i ) {
+        uint32_t surfCount = loaded_surface_iter_group_size( i );
+        for( int j = 0; j < surfCount; ++j ) {
+            struct Surface * ls = loaded_surface_iter_get_at_index( i, j );
+            allSurfaces[sindex++]=ls;
+        }
+    }
+
+    *count=numberOfSurfaces;
+    return allSurfaces;
+}
+
 /**
  * Iterate through the list of ceilings and find the first ceiling over a given point.
  */
