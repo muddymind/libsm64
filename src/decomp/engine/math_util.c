@@ -1529,6 +1529,30 @@ void *vec3s_to_vec3f(Vec3f dest, Vec3s a) {
     return &dest; //! warning: function returns address of local variable
 }
 
+/// Copy vector 'src' to 'dest'
+void *vec3i_copy(Vec3i dest, Vec3i src) {
+    dest[0] = src[0];
+    dest[1] = src[1];
+    dest[2] = src[2];
+    return &dest; //! warning: function returns address of local variable
+}
+
+/// Set vector 'dest' to (x, y, z)
+void *vec3i_set(Vec3i dest, s32 x, s32 y, s32 z) {
+    dest[0] = x;
+    dest[1] = y;
+    dest[2] = z;
+    return &dest; //! warning: function returns address of local variable
+}
+
+/// Set vector 'dest' to (x, y, z)
+void *vec3i_reset(Vec3i dest, s32 value) {
+    dest[0] = value;
+    dest[1] = value;
+    dest[2] = value;
+    return &dest; //! warning: function returns address of local variable
+}
+
 /**
  * Convert float vector a to a short vector 'dest' by rounding the components
  * to the nearest integer.

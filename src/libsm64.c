@@ -694,3 +694,42 @@ void* audio_thread(void* keepAlive)
 		currentTime = timeInMilliseconds();
     }
 }
+
+void copy_debug_collision_surface(struct SM64DebugSurface *dst, struct Surface *src)
+{
+	if( src != NULL ) {
+		vec3i_copy(dst->v1, src->vertex1);
+		vec3i_copy(dst->v2, src->vertex2);
+		vec3i_copy(dst->v3, src->vertex3);
+		dst->normaly = src->normal.y;
+	}
+	else
+	{
+		vec3i_reset(dst->v1, 0);
+		vec3i_reset(dst->v2, 0);
+		vec3i_reset(dst->v3, 0);
+		dst->normaly=0.0f;
+	}	
+}
+
+void sm64_get_collision_surfaces(struct SM64DebugSurface *floor, struct SM64DebugSurface *ceiling, struct SM64DebugSurface *wall)
+{
+	copy_debug_collision_surface(floor, gMarioState->floor);
+	copy_debug_collision_surface(wall, gMarioState->wall);
+	copy_debug_collision_surface(ceiling, gMarioState->ceil);
+}
+
+struct SM64DebugSurface *sm64_get_all_surfaces(int *surfacesCount)
+{
+	struct Surface **allSurfaces = get_all_geometry(surfacesCount);
+
+	struct SM64DebugSurface *result = (struct SM64DebugSurface*)malloc(sizeof(struct SM64DebugSurface)*(*surfacesCount));
+
+	for(int i=0; i<(*surfacesCount); i++) {
+		copy_debug_collision_surface(&(result[i]), allSurfaces[i]);
+	}
+
+	free(allSurfaces);
+
+	return result;
+}

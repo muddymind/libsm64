@@ -109,6 +109,13 @@ struct SM64AnimInfo
 	int32_t animAccel;
 };
 
+struct SM64DebugSurface
+{
+    int v1[3];
+    int v2[3];
+    int v3[3];
+    float normaly;
+};
 
 typedef void (*SM64DebugPrintFunctionPtr)( const char * );
 
@@ -164,6 +171,9 @@ extern SM64_LIB_FN uint16_t sm64_get_current_background_music();
 extern SM64_LIB_FN void sm64_play_sound(int32_t soundBits, float *pos);
 extern SM64_LIB_FN void sm64_play_sound_global(int32_t soundBits);
 extern SM64_LIB_FN int sm64_get_version();
+
+extern SM64_LIB_FN void sm64_get_collision_surfaces(struct SM64DebugSurface *floor, struct SM64DebugSurface *ceiling, struct SM64DebugSurface *wall);
+extern SM64_LIB_FN struct SM64DebugSurface *sm64_get_all_surfaces(int *surfacesCount);
 
 void audio_tick();
 void* audio_thread(void* param);
