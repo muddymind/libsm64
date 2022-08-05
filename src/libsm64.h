@@ -115,6 +115,7 @@ struct SM64DebugSurface
     int v2[3];
     int v3[3];
     float normaly;
+    uintptr_t surfacePointer;
 };
 
 typedef void (*SM64DebugPrintFunctionPtr)( const char * );
