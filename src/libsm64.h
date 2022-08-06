@@ -16,12 +16,21 @@
     #define SM64_LIB_FN
 #endif
 
+// enum SM64ExternalSurfaceType
+// {
+//     floor,
+//     door,
+//     trapdoor,
+//     static_object
+// };
+
 struct SM64Surface
 {
     int16_t type;
     int16_t force;
     uint16_t terrain;
     int32_t vertices[3][3];
+    //enum SM64ExternalSurfaceType externalType;
 };
 
 struct SM64MarioInputs
@@ -29,19 +38,6 @@ struct SM64MarioInputs
     float camLookX, camLookZ;
     float stickX, stickY;
     uint8_t buttonA, buttonB, buttonZ;
-};
-
-struct SM64ObjectTransform
-{
-    float position[3];
-    float eulerRotation[3];
-};
-
-struct SM64SurfaceObject
-{
-    struct SM64ObjectTransform transform;
-    uint32_t surfaceCount;
-    struct SM64Surface *surfaces;
 };
 
 struct SM64MarioState
@@ -130,7 +126,7 @@ enum
 extern SM64_LIB_FN void sm64_global_init( uint8_t *rom, uint8_t *outTexture, SM64DebugPrintFunctionPtr debugPrintFunction );
 extern SM64_LIB_FN void sm64_global_terminate( void );
 
-extern SM64_LIB_FN void sm64_static_surfaces_load( const struct SM64Surface *surfaceArray, uint32_t numSurfaces );
+//extern SM64_LIB_FN void sm64_static_surfaces_load( const struct SM64Surface *surfaceArray, uint32_t numSurfaces );
 
 extern SM64_LIB_FN int32_t sm64_mario_create( float x, float y, float z, int16_t rx, int16_t ry, int16_t rz, uint8_t fake );
 extern SM64_LIB_FN void sm64_mario_tick( int32_t marioId, const struct SM64MarioInputs *inputs, struct SM64MarioState *outState, struct SM64MarioGeometryBuffers *outBuffers );
@@ -160,9 +156,9 @@ extern SM64_LIB_FN void sm64_mario_kill(int32_t marioId);
 extern SM64_LIB_FN void sm64_mario_interact_cap(int32_t marioId, uint32_t capFlag, uint16_t capTime, uint8_t playMusic);
 extern SM64_LIB_FN bool sm64_mario_attack(int32_t marioId, float x, float y, float z, float hitboxHeight);
 
-extern SM64_LIB_FN uint32_t sm64_surface_object_create( const struct SM64SurfaceObject *surfaceObject );
-extern SM64_LIB_FN void sm64_surface_object_move( uint32_t objectId, const struct SM64ObjectTransform *transform );
-extern SM64_LIB_FN void sm64_surface_object_delete( uint32_t objectId );
+// extern SM64_LIB_FN uint32_t sm64_surface_object_create( const struct SM64SurfaceObject *surfaceObject );
+// extern SM64_LIB_FN void sm64_surface_object_move( uint32_t objectId, const struct SM64ObjectTransform *transform );
+// extern SM64_LIB_FN void sm64_surface_object_delete( uint32_t objectId );
 
 extern SM64_LIB_FN void sm64_seq_player_play_sequence(uint8_t player, uint8_t seqId, uint16_t arg2);
 extern SM64_LIB_FN void sm64_play_music(uint8_t player, uint16_t seqArgs, uint16_t fadeTimer);
@@ -178,5 +174,10 @@ extern SM64_LIB_FN struct SM64DebugSurface *sm64_get_all_surfaces(int *surfacesC
 
 void audio_tick();
 void* audio_thread(void* param);
+
+extern SM64_LIB_FN void sm64_level_init(uint32_t roomsCount);
+extern SM64_LIB_FN void sm64_level_unload();
+extern SM64_LIB_FN void sm64_level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces);
+extern SM64_LIB_FN void sm64_level_unload_room(uint32_t roomId);
 
 #endif//LIB_SM64_H

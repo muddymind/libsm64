@@ -1,6 +1,8 @@
 #ifndef SURFACE_COLLISION_H
 #define SURFACE_COLLISION_H
 
+#include <stdbool.h>
+#include <stdlib.h>
 #include "../include/PR/ultratypes.h"
 
 #include "../include/types.h"

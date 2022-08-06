@@ -183,15 +183,16 @@ SM64_LIB_FN void sm64_global_terminate( void )
 	   
 	ctl_free();
     alloc_only_pool_free( s_mario_geo_pool );
-    surfaces_unload_all();
+    //surfaces_unload_all();
+	level_unload();
     unload_mario_anims();
     memory_terminate();
 }
 
-SM64_LIB_FN void sm64_static_surfaces_load( const struct SM64Surface *surfaceArray, uint32_t numSurfaces )
-{
-    surfaces_load_static( surfaceArray, numSurfaces );
-}
+// SM64_LIB_FN void sm64_static_surfaces_load( const struct SM64Surface *surfaceArray, uint32_t numSurfaces )
+// {
+//     surfaces_load_static( surfaceArray, numSurfaces );
+// }
 
 SM64_LIB_FN int32_t sm64_mario_create( float x, float y, float z, int16_t rx, int16_t ry, int16_t rz, uint8_t fake )
 {
@@ -580,32 +581,32 @@ SM64_LIB_FN bool sm64_mario_attack(int32_t marioId, float x, float y, float z, f
 	return fake_interact_bounce_top(gMarioState, x, y, z, hitboxHeight);
 }
 
-SM64_LIB_FN uint32_t sm64_surface_object_create( const struct SM64SurfaceObject *surfaceObject )
-{
-    uint32_t id = surfaces_load_object( surfaceObject );
-    return id;
-}
+// SM64_LIB_FN uint32_t sm64_surface_object_create( const struct SM64SurfaceObject *surfaceObject )
+// {
+//     uint32_t id = surfaces_load_object( surfaceObject );
+//     return id;
+// }
 
-SM64_LIB_FN void sm64_surface_object_move( uint32_t objectId, const struct SM64ObjectTransform *transform )
-{
-    surface_object_update_transform( objectId, transform );
-}
+// SM64_LIB_FN void sm64_surface_object_move( uint32_t objectId, const struct SM64ObjectTransform *transform )
+// {
+//     surface_object_update_transform( objectId, transform );
+// }
 
-SM64_LIB_FN void sm64_surface_object_delete( uint32_t objectId )
-{
-    // A mario standing on the platform that is being destroyed will have a pointer to freed memory if we don't clear it.
-    for( int i = 0; i < s_mario_instance_pool.size; ++i )
-    {
-        if( s_mario_instance_pool.objects[i] == NULL )
-            continue;
+// SM64_LIB_FN void sm64_surface_object_delete( uint32_t objectId )
+// {
+//     // A mario standing on the platform that is being destroyed will have a pointer to freed memory if we don't clear it.
+//     for( int i = 0; i < s_mario_instance_pool.size; ++i )
+//     {
+//         if( s_mario_instance_pool.objects[i] == NULL )
+//             continue;
 
-        struct GlobalState *state = ((struct MarioInstance *)s_mario_instance_pool.objects[ i ])->globalState;
-        if( state->mgMarioObject->platform == surfaces_object_get_transform_ptr( objectId ))
-            state->mgMarioObject->platform = NULL;
-    }
+//         struct GlobalState *state = ((struct MarioInstance *)s_mario_instance_pool.objects[ i ])->globalState;
+//         if( state->mgMarioObject->platform == surfaces_object_get_transform_ptr( objectId ))
+//             state->mgMarioObject->platform = NULL;
+//     }
 
-    surfaces_unload_object( objectId );
-}
+//     surfaces_unload_object( objectId );
+// }
 
 SM64_LIB_FN void sm64_seq_player_play_sequence(uint8_t player, uint8_t seqId, uint16_t arg2)
 {
@@ -744,4 +745,24 @@ struct SM64DebugSurface *sm64_get_all_surfaces(int *surfacesCount)
 	free(allSurfaces);
 
 	return result;
+}
+
+void sm64_level_init(uint32_t roomsCount)
+{
+	level_init(roomsCount);
+}
+
+void sm64_level_unload()
+{
+	level_unload();
+}
+
+void sm64_level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces)
+{
+	level_load_room(roomId, staticSurfaces, numSurfaces);
+}
+
+void sm64_level_unload_room(uint32_t roomId)
+{
+	level_unload_room(roomId);
 }
