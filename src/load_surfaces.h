@@ -1,6 +1,7 @@
 #pragma once
 
 #include "decomp/include/types.h"
+#include "decomp/include/external_types.h"
 #include "libsm64.h"
 
 // extern uint32_t loaded_surface_iter_group_count( void );
@@ -16,7 +17,7 @@
 
 extern void level_init(uint32_t roomsCount);
 extern void level_unload();
-extern void level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces);
+extern void level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces, const struct SM64SurfaceObject *staticObjects, uint32_t staticObjectsCount);
 extern void level_unload_room(uint32_t roomId);
 
 extern uint32_t level_get_all_surface_group_count(void);

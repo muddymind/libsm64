@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "decomp/include/external_types.h"
 
 #ifdef _WIN32
     #ifdef SM64_LIB_EXPORT
@@ -112,6 +113,7 @@ struct SM64DebugSurface
     int v3[3];
     float normaly;
     uintptr_t surfacePointer;
+    int color;
 };
 
 typedef void (*SM64DebugPrintFunctionPtr)( const char * );
@@ -177,7 +179,7 @@ void* audio_thread(void* param);
 
 extern SM64_LIB_FN void sm64_level_init(uint32_t roomsCount);
 extern SM64_LIB_FN void sm64_level_unload();
-extern SM64_LIB_FN void sm64_level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces);
+extern SM64_LIB_FN void sm64_level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces, const struct SM64SurfaceObject *staticObjects, uint32_t staticObjectsCount);
 extern SM64_LIB_FN void sm64_level_unload_room(uint32_t roomId);
 
 #endif//LIB_SM64_H

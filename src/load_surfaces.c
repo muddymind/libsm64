@@ -17,52 +17,45 @@ static struct Room **s_level_rooms=NULL;
 static uint32_t s_level_loaded_rooms_count = 0;
 static struct Room **s_level_loaded_rooms = NULL;
 
-
-// static uint32_t s_static_surface_count = 0;
-// static struct Surface *s_static_surface_list = NULL;
-
-// static uint32_t s_surface_object_count = 0;
-// static struct LoadedSurfaceObject *s_surface_object_list = NULL;
-
 #define CONVERT_ANGLE( x ) ((s16)( -(x) / 180.0f * 32768.0f ))
 
-// static void init_transform( struct SurfaceObjectTransform *out, const struct SM64ObjectTransform *in )
-// {
-//     out->aVelX = 0.0f;
-//     out->aVelY = 0.0f;
-//     out->aVelZ = 0.0f;
-//     out->aPosX = in->position[0];
-//     out->aPosY = in->position[1];
-//     out->aPosZ = in->position[2];
+static void init_transform( struct SurfaceObjectTransform *out, const struct SM64ObjectTransform *in )
+{
+    out->aVelX = 0.0f;
+    out->aVelY = 0.0f;
+    out->aVelZ = 0.0f;
+    out->aPosX = in->position[0];
+    out->aPosY = in->position[1];
+    out->aPosZ = in->position[2];
 
-//     out->aAngleVelPitch = 0.0f;
-//     out->aAngleVelYaw   = 0.0f;
-//     out->aAngleVelRoll  = 0.0f;
-//     out->aFaceAnglePitch = CONVERT_ANGLE(in->eulerRotation[0]);
-//     out->aFaceAngleYaw   = CONVERT_ANGLE(in->eulerRotation[1]);
-//     out->aFaceAngleRoll  = CONVERT_ANGLE(in->eulerRotation[2]);
-// }
+    out->aAngleVelPitch = 0.0f;
+    out->aAngleVelYaw   = 0.0f;
+    out->aAngleVelRoll  = 0.0f;
+    out->aFaceAnglePitch = CONVERT_ANGLE(in->eulerRotation[0]);
+    out->aFaceAngleYaw   = CONVERT_ANGLE(in->eulerRotation[1]);
+    out->aFaceAngleRoll  = CONVERT_ANGLE(in->eulerRotation[2]);
+}
 
-// static void update_transform( struct SurfaceObjectTransform *out, const struct SM64ObjectTransform *in )
-// {
-//     out->aVelX = in->position[0] - out->aPosX;
-//     out->aVelY = in->position[1] - out->aPosY;
-//     out->aVelZ = in->position[2] - out->aPosZ;
-//     out->aPosX = in->position[0];
-//     out->aPosY = in->position[1];
-//     out->aPosZ = in->position[2];
+static void update_transform( struct SurfaceObjectTransform *out, const struct SM64ObjectTransform *in )
+{
+    out->aVelX = in->position[0] - out->aPosX;
+    out->aVelY = in->position[1] - out->aPosY;
+    out->aVelZ = in->position[2] - out->aPosZ;
+    out->aPosX = in->position[0];
+    out->aPosY = in->position[1];
+    out->aPosZ = in->position[2];
 
-//     s16 inX = CONVERT_ANGLE(in->eulerRotation[0]);
-//     s16 inY = CONVERT_ANGLE(in->eulerRotation[1]);
-//     s16 inZ = CONVERT_ANGLE(in->eulerRotation[2]);
+    s16 inX = CONVERT_ANGLE(in->eulerRotation[0]);
+    s16 inY = CONVERT_ANGLE(in->eulerRotation[1]);
+    s16 inZ = CONVERT_ANGLE(in->eulerRotation[2]);
 
-//     out->aAngleVelPitch = inX - out->aFaceAnglePitch;
-//     out->aAngleVelYaw   = inY - out->aFaceAngleYaw;
-//     out->aAngleVelRoll  = inZ - out->aFaceAngleRoll;
-//     out->aFaceAnglePitch = inX;
-//     out->aFaceAngleYaw   = inY;
-//     out->aFaceAngleRoll  = inZ;
-// }
+    out->aAngleVelPitch = inX - out->aFaceAnglePitch;
+    out->aAngleVelYaw   = inY - out->aFaceAngleYaw;
+    out->aAngleVelRoll  = inZ - out->aFaceAngleRoll;
+    out->aFaceAnglePitch = inX;
+    out->aFaceAngleYaw   = inY;
+    out->aFaceAngleRoll  = inZ;
+}
 
 /**
  * Returns whether a surface has exertion/moves Mario
@@ -335,11 +328,21 @@ static void engine_surface_from_lib_surface( struct Surface *surface, const stru
 //     s_surface_object_list = NULL;
 // }
 
-void level_unload_loaded_object(struct LoadedSurfaceObject object)
+void level_update_loaded_rooms_list()
 {
-    free( object.transform );
-    free( object.libSurfaces );
-    free( object.engineSurfaces );
+    if(s_level_rooms==NULL || s_level_rooms_count==0)
+    {
+        s_level_loaded_rooms_count=0;
+        return;
+    }
+
+    s_level_loaded_rooms_count=0;
+    for(uint32_t i=0; i<s_level_rooms_count; i++)
+    {
+        if(s_level_rooms[i]!=NULL){
+            s_level_loaded_rooms[s_level_loaded_rooms_count++]=s_level_rooms[i];
+        }
+    }
 }
 
 void level_unload_room(uint32_t roomId)
@@ -367,17 +370,10 @@ void level_unload_room(uint32_t roomId)
         room->staticSurfaces = NULL;
     }
 
-    if( room->loadedObjecs != NULL && room->loadedObjecsCount >0 )
+    if( room->staticObjectSurfaces != NULL )
     {
-        for(uint32_t i=0; i<room->loadedObjecsCount; i++) 
-        {
-            level_unload_loaded_object(room->loadedObjecs[i]);
-        }
-    }
-
-    if( room->loadedObjecs != NULL )
-    {
-        free(room->loadedObjecs);
+        free(room->staticObjectSurfaces);
+        room->staticObjectSurfaces = NULL;
     }
 
     free(room);
@@ -386,7 +382,7 @@ void level_unload_room(uint32_t roomId)
     level_update_loaded_rooms_list();
 }
 
-void level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces) 
+void level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces, const struct SM64SurfaceObject *staticObjects, uint32_t staticObjectsCount) 
 {
     #ifdef DEBUG_LEVEL_ROOMS
 		printf("SM64: loading room %d\n", roomId);
@@ -405,14 +401,37 @@ void level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, 
     struct Room *room = (struct Room*)malloc(sizeof(struct Room));
     s_level_rooms[roomId] = room;
 
+    // Import of room static surfaces
     room->staticSurfacesCount = numSurfaces;
     room->staticSurfaces = malloc( sizeof( struct Surface ) * numSurfaces );
 
     for( uint32_t i = 0; i < numSurfaces; ++i )
+    {
         engine_surface_from_lib_surface( &room->staticSurfaces[i], &staticSurfaces[i], NULL );
+    }
 
-    room->loadedObjecsCount=0;
-    room->loadedObjecs=NULL;
+
+    room->staticObjectSurfacesCount=0;
+    int acc=0;
+    for(int i=0; i<staticObjectsCount; i++)
+    {
+        acc+=staticObjects[i].surfaceCount;
+        room->staticObjectSurfacesCount+=staticObjects[i].surfaceCount;
+    }
+    room->staticObjectSurfaces = malloc( sizeof( struct Surface ) * room->staticObjectSurfacesCount );
+    
+    uint32_t cIdx=0;
+    for(int i=0; i<staticObjectsCount; i++)
+    {
+        struct SurfaceObjectTransform transform;
+        init_transform( &transform, &(staticObjects[i].transform) );
+        for(int j=0; j<staticObjects[i].surfaceCount;j++)
+        {
+            engine_surface_from_lib_surface( &room->staticObjectSurfaces[cIdx], &staticObjects[i].surfaces[j], &transform );
+            room->staticObjectSurfaces[cIdx].room=1;
+            cIdx++;
+        }
+    }
 
     level_update_loaded_rooms_list();    
 }
@@ -443,23 +462,6 @@ void level_unload()
     }
 }
 
-void level_update_loaded_rooms_list()
-{
-    if(s_level_rooms==NULL || s_level_rooms_count==0)
-    {
-        s_level_loaded_rooms_count=0;
-        return;
-    }
-
-    s_level_loaded_rooms_count=0;
-    for(uint32_t i=0; i<s_level_rooms_count; i++)
-    {
-        if(s_level_rooms[i]!=NULL){
-            s_level_loaded_rooms[s_level_loaded_rooms_count++]=s_level_rooms[i];
-        }
-    }
-}
-
 void level_init(uint32_t roomsCount)
 {
     #ifdef DEBUG_LEVEL_ROOMS
@@ -480,59 +482,32 @@ void level_init(uint32_t roomsCount)
 
 uint32_t level_get_all_surface_group_count(void)
 {
-    return s_level_loaded_rooms_count;
+    return s_level_loaded_rooms_count*2;
 }
 
 uint32_t level_get_all_surface_group_size(uint32_t groupIndex)
 {
     if(groupIndex>=s_level_loaded_rooms_count)
     {
-        return 0;
+        groupIndex-=s_level_loaded_rooms_count;
+        return s_level_loaded_rooms[groupIndex]->staticObjectSurfacesCount;
     }
-    return s_level_loaded_rooms[groupIndex]->staticSurfacesCount;
+    else
+    {
+        return s_level_loaded_rooms[groupIndex]->staticSurfacesCount;
+    }
 }
 
 extern struct Surface *level_get_surface_index(uint32_t groupIndex, uint32_t surfaceIndex)
 {
-    return &(s_level_loaded_rooms[groupIndex]->staticSurfaces[surfaceIndex]);
+    if(groupIndex>=s_level_loaded_rooms_count)
+    {
+        groupIndex-=s_level_loaded_rooms_count;
+        return &(s_level_loaded_rooms[groupIndex]->staticObjectSurfaces[surfaceIndex]);
+    }
+    else
+    {
+        return &(s_level_loaded_rooms[groupIndex]->staticSurfaces[surfaceIndex]);
+    }
 }
 
-
-// uint32_t surfaces_load_object( const struct SM64SurfaceObject *surfaceObject )
-// {
-//     bool pickedOldIndex = false;
-//     uint32_t idx = s_surface_object_count;
-
-//     for( int i = 0; i < s_surface_object_count; ++i )
-//     {
-//         if( s_surface_object_list[i].surfaceCount == 0 )
-//         {
-//             pickedOldIndex = true;
-//             idx = i;
-//             break;
-//         }
-//     }
-
-//     if( !pickedOldIndex )
-//     {
-//         idx = s_surface_object_count;
-//         s_surface_object_count++;
-//         s_surface_object_list = realloc( s_surface_object_list, s_surface_object_count * sizeof( struct LoadedSurfaceObject ));
-//     }
-
-//     struct LoadedSurfaceObject *obj = &s_surface_object_list[idx];
-
-//     obj->surfaceCount = surfaceObject->surfaceCount;
-
-//     obj->transform = malloc( sizeof( struct SurfaceObjectTransform ));
-//     init_transform( obj->transform, &surfaceObject->transform );
-
-//     obj->libSurfaces = malloc( obj->surfaceCount * sizeof( struct SM64Surface ));
-//     memcpy( obj->libSurfaces, surfaceObject->surfaces, obj->surfaceCount * sizeof( struct SM64Surface ));
-
-//     obj->engineSurfaces = malloc( obj->surfaceCount * sizeof( struct Surface ));
-//     for( int i = 0; i < obj->surfaceCount; ++i )
-//         engine_surface_from_lib_surface( &obj->engineSurfaces[i], &obj->libSurfaces[i], obj->transform );
-
-//     return idx;
-// }

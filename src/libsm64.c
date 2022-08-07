@@ -309,7 +309,7 @@ SM64_LIB_FN void sm64_mario_tick( int32_t marioId, const struct SM64MarioInputs 
     update_button( inputs->buttonB, B_BUTTON );
     update_button( inputs->buttonZ, Z_TRIG );
 
-	gMarioState->marioObj->header.gfx.cameraToObject[0] = 0;
+	gMarioState->marioObj->header.gfx.cameraToObject[0] = 0; 
 	gMarioState->marioObj->header.gfx.cameraToObject[1] = 0;
 	gMarioState->marioObj->header.gfx.cameraToObject[2] = 0;
 
@@ -704,6 +704,7 @@ void copy_debug_collision_surface(struct SM64DebugSurface *dst, struct Surface *
 		vec3i_copy(dst->v3, src->vertex3);
 		dst->normaly = src->normal.y;
 		dst->surfacePointer = (uintptr_t)src;
+		dst->color = src->room;
 	}
 	else
 	{
@@ -757,9 +758,9 @@ void sm64_level_unload()
 	level_unload();
 }
 
-void sm64_level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces)
+void sm64_level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces, const struct SM64SurfaceObject *staticObjects, uint32_t staticObjectsCount)
 {
-	level_load_room(roomId, staticSurfaces, numSurfaces);
+	level_load_room(roomId, staticSurfaces, numSurfaces, staticObjects, staticObjectsCount);
 }
 
 void sm64_level_unload_room(uint32_t roomId)

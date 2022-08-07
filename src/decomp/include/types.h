@@ -7,7 +7,6 @@
 #include "ultra64.h"
 #include "macros.h"
 #include "PR/ultratypes.h"
-#include "external_types.h"
 
 
 // Certain functions are marked as having return values, but do not
@@ -277,8 +276,8 @@ struct Room
     struct Surface *staticSurfaces;
     uint32_t staticSurfacesCount;
 
-    struct LoadedSurfaceObject *loadedObjecs;
-    uint32_t loadedObjecsCount;
+    struct Surface *staticObjectSurfaces;
+    uint32_t staticObjectSurfacesCount;
 };
 
 
