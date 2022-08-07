@@ -8,7 +8,7 @@ struct Surface **get_all_geometry(int *count){
     uint32_t numberOfSurfaces=0;
 
     uint32_t groupCount = level_get_all_surface_group_count();
-    for( int i = 0; i < groupCount; ++i ) {
+    for( int i = 0; i < groupCount-1; ++i ) {
         uint32_t surfCount = level_get_all_surface_group_size( i );
         numberOfSurfaces+=surfCount;
     }
@@ -16,15 +16,11 @@ struct Surface **get_all_geometry(int *count){
     struct Surface **allSurfaces = (struct Surface **)malloc(sizeof(struct Surface *)*numberOfSurfaces);
 
     uint32_t sindex=0;
-    for( int i = 0; i < groupCount; ++i ) {
+    for( int i = 0; i < groupCount-1; ++i ) {
         uint32_t surfCount = level_get_all_surface_group_size( i );
         for( int j = 0; j < surfCount; ++j ) {
             struct Surface * ls = level_get_surface_index( i, j );
-            if(i== groupCount-1)
-            {
-                ls->room=2;
-            }
-            else if(i>=(groupCount-1)/2)
+            if(i>=(groupCount-1)/2)
             {
                 ls->room=1;
             }
@@ -35,6 +31,24 @@ struct Surface **get_all_geometry(int *count){
 
     *count=numberOfSurfaces;
     return allSurfaces;
+}
+
+struct Surface **get_dynamic_geometry(int *count){
+
+    uint32_t groupCount = level_get_all_surface_group_count();
+    uint32_t numberOfSurfaces = level_get_all_surface_group_size( groupCount-1 );
+
+    struct Surface **dynamicSurfaces = (struct Surface **)malloc(sizeof(struct Surface *)*numberOfSurfaces);
+
+    for( int i = 0; i < numberOfSurfaces; i++ ) {
+        struct Surface * ls = level_get_surface_index( groupCount-1, i++ );
+        ls->room=2;
+        dynamicSurfaces[i]=ls;
+    }
+    
+
+    *count=numberOfSurfaces;
+    return dynamicSurfaces;
 }
 
 /**

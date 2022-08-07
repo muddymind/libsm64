@@ -716,7 +716,7 @@ void copy_debug_collision_surface(struct SM64DebugSurface *dst, struct Surface *
 	}	
 }
 
-void sm64_get_collision_surfaces(struct SM64DebugSurface *floor, struct SM64DebugSurface *ceiling, struct SM64DebugSurface *wall)
+struct SM64DebugSurface *sm64_get_collision_surfaces(struct SM64DebugSurface *floor, struct SM64DebugSurface *ceiling, struct SM64DebugSurface *wall, int *collidersCount)
 {
 	if(floor->surfacePointer != (uintptr_t) gMarioState->floor )
 	{
@@ -731,6 +731,18 @@ void sm64_get_collision_surfaces(struct SM64DebugSurface *floor, struct SM64Debu
 	if(ceiling->surfacePointer != (uintptr_t) gMarioState->ceil ){
 		copy_debug_collision_surface(ceiling, gMarioState->ceil);
 	}
+
+	struct Surface **colliders = get_dynamic_geometry(collidersCount);
+
+	struct SM64DebugSurface *result = (struct SM64DebugSurface*)malloc(sizeof(struct SM64DebugSurface)*(*collidersCount));
+
+	for(int i=0; i<(*collidersCount); i++) {
+		copy_debug_collision_surface(&(result[i]), colliders[i]);
+	}
+
+	free(colliders);
+
+	return result;
 }
 
 struct SM64DebugSurface *sm64_get_all_surfaces(int *surfacesCount)
