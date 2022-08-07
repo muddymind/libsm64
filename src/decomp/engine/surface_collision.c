@@ -20,7 +20,16 @@ struct Surface **get_all_geometry(int *count){
         uint32_t surfCount = level_get_all_surface_group_size( i );
         for( int j = 0; j < surfCount; ++j ) {
             struct Surface * ls = level_get_surface_index( i, j );
-            allSurfaces[sindex++]=ls;
+            if(i== groupCount-1)
+            {
+                ls->room=2;
+            }
+            else if(i>=(groupCount-1)/2)
+            {
+                ls->room=1;
+            }
+            allSurfaces[sindex]=ls;
+            sindex++;
         }
     }
 

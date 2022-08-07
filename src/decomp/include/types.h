@@ -267,8 +267,8 @@ struct LoadedSurfaceObject
 {
     struct SurfaceObjectTransform *transform;
     uint32_t surfaceCount;
-    struct Surface *engineSurfaces;
     struct SM64Surface *libSurfaces;
+    struct Surface *engineSurfaces;    
 };
 
 struct Room
