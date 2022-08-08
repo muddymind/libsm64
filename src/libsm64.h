@@ -179,5 +179,7 @@ extern SM64_LIB_FN void sm64_level_init(uint32_t roomsCount);
 extern SM64_LIB_FN void sm64_level_unload();
 extern SM64_LIB_FN void sm64_level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces, const struct SM64SurfaceObject *staticObjects, uint32_t staticObjectsCount);
 extern SM64_LIB_FN void sm64_level_unload_room(uint32_t roomId);
+extern SM64_LIB_FN void sm64_level_update_loaded_rooms_list(int *loadedRooms, int loadedCount);
+extern SM64_LIB_FN void sm64_level_rooms_switch(int switchedRooms[][2], int switchedRoomsCount);
 
 #endif//LIB_SM64_H

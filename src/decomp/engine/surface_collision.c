@@ -41,7 +41,7 @@ struct Surface **get_dynamic_geometry(int *count){
     struct Surface **dynamicSurfaces = (struct Surface **)malloc(sizeof(struct Surface *)*numberOfSurfaces);
 
     for( int i = 0; i < numberOfSurfaces; i++ ) {
-        struct Surface * ls = level_get_surface_index( groupCount-1, i++ );
+        struct Surface * ls = level_get_surface_index( groupCount-1, i );
         ls->room=2;
         dynamicSurfaces[i]=ls;
     }

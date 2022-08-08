@@ -698,7 +698,7 @@ void* audio_thread(void* keepAlive)
 
 void copy_debug_collision_surface(struct SM64DebugSurface *dst, struct Surface *src)
 {
-	if( src ) {
+	if( src && src->isValid ) {
 		vec3i_copy(dst->v1, src->vertex1);
 		vec3i_copy(dst->v2, src->vertex2);
 		vec3i_copy(dst->v3, src->vertex3);
@@ -778,4 +778,14 @@ void sm64_level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfa
 void sm64_level_unload_room(uint32_t roomId)
 {
 	level_unload_room(roomId);
+}
+
+void sm64_level_update_loaded_rooms_list(int *loadedRooms, int loadedCount)
+{
+	level_update_loaded_rooms_list(loadedRooms, loadedCount);
+}
+
+void sm64_level_rooms_switch(int switchedRooms[][2], int switchedRoomsCount)
+{
+	level_rooms_switch(switchedRooms, switchedRoomsCount);
 }
