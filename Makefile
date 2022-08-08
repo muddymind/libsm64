@@ -4,7 +4,7 @@ CC      := gcc
 CXX 	:= g++
 CFLAGS  := -g -Wall -fPIC -DSM64_LIB_EXPORT -DVERSION_US -DNO_SEGMENTED_MEMORY -DGBI_FLOATS -DDEBUG_LEVEL_ROOMS
 LDFLAGS := -g -lm -shared -lpthread
-ENDFLAGS := -fPIC
+ENDFLAGS := -g -fPIC
 ifeq ($(OS),Windows_NT)
 LDFLAGS := $(LDFLAGS)
 ENDFLAGS := -g -static -lole32 -lstdc++
