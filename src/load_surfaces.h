@@ -10,6 +10,7 @@ extern void level_load_room(uint32_t roomId, const struct SM64Surface *staticSur
 extern void level_unload_room(uint32_t roomId);
 extern void level_update_loaded_rooms_list(int *loadedRooms, int loadedCount);
 extern void level_rooms_switch(int switchedRooms[][2], int switchedRoomsCount);
+extern void level_update_big_floor_hack(float x, float y, float z);
 
 extern uint32_t level_create_dynamic_object( const struct SM64SurfaceObject *surfaceObject );
 extern void level_remove_dynamic_object( uint32_t objId );

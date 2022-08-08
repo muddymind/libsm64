@@ -11,6 +11,9 @@
 
 #include "debug_print.h"
 
+#define BIG_HACK_FLOOR_HEIGHT 1000
+#define BIG_HACK_FLOOR_DIMENSIONS 1000
+
 static uint32_t s_level_rooms_count = 0;
 static struct Room **s_level_rooms=NULL;
 
@@ -23,8 +26,69 @@ static struct LoadedSurfaceObject *s_surface_object_list = NULL;
 static uint32_t s_cached_object_surface_count=0;
 static struct Surface **s_cached_object_surface_list = NULL;
 
+static struct Surface *s_big_floor_hack1 = NULL;
+static struct Surface *s_big_floor_hack2 = NULL;
+
 
 #define CONVERT_ANGLE( x ) ((s16)( -(x) / 180.0f * 32768.0f ))
+
+struct Surface * create_big_floor_hack_surface()
+{
+    struct Surface *surf = (struct Surface *) malloc(sizeof(struct Surface));
+    surf->room=-1;
+    surf->isValid = 1;
+    surf->force=0;
+    surf->transform = NULL;
+    surf->type = TERRAIN_STONE;
+    surf->flags = (s8) 0;
+
+    surf->normal.x = 0.0f;
+    surf->normal.y = 1.0f;
+    surf->normal.z = 0.0f;
+}
+
+void create_big_floor_hack()
+{
+    s_big_floor_hack1=create_big_floor_hack_surface();
+    s_big_floor_hack2=create_big_floor_hack_surface();
+
+    level_update_big_floor_hack(0.0f, 0.0f, 0.0f);
+}
+
+void level_update_big_floor_hack(float x, float y, float z)
+{
+    int height = y-BIG_HACK_FLOOR_HEIGHT;
+
+    s_big_floor_hack1->vertex1[0] = x-BIG_HACK_FLOOR_DIMENSIONS;
+    s_big_floor_hack1->vertex2[0] = x-BIG_HACK_FLOOR_DIMENSIONS;
+    s_big_floor_hack1->vertex3[0] = x+BIG_HACK_FLOOR_DIMENSIONS;
+
+    s_big_floor_hack2->vertex1[0] = x-BIG_HACK_FLOOR_DIMENSIONS;
+    s_big_floor_hack2->vertex2[0] = x+BIG_HACK_FLOOR_DIMENSIONS;
+    s_big_floor_hack2->vertex3[0] = x+BIG_HACK_FLOOR_DIMENSIONS;
+
+    s_big_floor_hack1->vertex1[1] = height;
+    s_big_floor_hack1->vertex2[1] = height;
+    s_big_floor_hack1->vertex3[1] = height;
+
+    s_big_floor_hack2->vertex1[1] = height;
+    s_big_floor_hack2->vertex2[1] = height;
+    s_big_floor_hack2->vertex3[1] = height;
+
+    s_big_floor_hack1->vertex1[2] = z-BIG_HACK_FLOOR_DIMENSIONS;
+    s_big_floor_hack1->vertex2[2] = z+BIG_HACK_FLOOR_DIMENSIONS;
+    s_big_floor_hack1->vertex3[2] = z+BIG_HACK_FLOOR_DIMENSIONS;
+
+    s_big_floor_hack2->vertex1[2] = z-BIG_HACK_FLOOR_DIMENSIONS;
+    s_big_floor_hack2->vertex2[2] = z+BIG_HACK_FLOOR_DIMENSIONS;
+    s_big_floor_hack2->vertex3[2] = z-BIG_HACK_FLOOR_DIMENSIONS;
+
+    s_big_floor_hack1->originOffset = -height;
+    s_big_floor_hack2->originOffset = -height;
+
+    s_big_floor_hack1->lowerY = height;
+    s_big_floor_hack2->upperY = height;
+}
 
 static void init_transform( struct SurfaceObjectTransform *out, const struct SM64ObjectTransform *in )
 {
@@ -232,6 +296,10 @@ void update_cached_object_surface_list()
         s_cached_object_surface_count+=s_surface_object_list[i].surfaceCount;
     }
 
+    //make space for big floor surfaces
+    if(s_big_floor_hack1!=NULL && s_big_floor_hack2!=NULL)
+        s_cached_object_surface_count+=2;
+    
     s_cached_object_surface_list = (struct Surface**)malloc(sizeof(struct Surface*)*s_cached_object_surface_count);
 
     int currentIdx=0;
@@ -241,6 +309,12 @@ void update_cached_object_surface_list()
         {
             s_cached_object_surface_list[currentIdx++] = &(s_surface_object_list[i].engineSurfaces[j]);
         }
+    }
+
+    if(s_big_floor_hack1!=NULL && s_big_floor_hack2!=NULL)
+    {
+        s_cached_object_surface_list[currentIdx++]=s_big_floor_hack1;
+        s_cached_object_surface_list[currentIdx++]=s_big_floor_hack2;
     }
 }
 
@@ -512,6 +586,17 @@ void level_unload()
         s_surface_object_list = NULL;
     }
 
+    if(s_big_floor_hack1!=NULL)
+    {
+        free(s_big_floor_hack1);
+        s_big_floor_hack1=NULL;
+    }
+    if(s_big_floor_hack2!=NULL)
+    {
+        free(s_big_floor_hack2);
+        s_big_floor_hack2=NULL;
+    }
+
     update_cached_object_surface_list();
 }
 
@@ -531,6 +616,8 @@ void level_init(uint32_t roomsCount)
 
     s_level_loaded_rooms = 0;
     s_level_loaded_rooms = (struct Room**)malloc(sizeof(struct Room*)*roomsCount);
+
+    create_big_floor_hack();
 }
 
 void level_update_loaded_rooms_list(int *loadedRooms, int loadedCount)

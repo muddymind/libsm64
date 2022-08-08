@@ -137,6 +137,8 @@ static struct Surface *find_floor_from_list( s32 x, s32 y, s32 z, f32 *pheight) 
     f32 height;
     struct Surface *floor = NULL;
 
+    level_update_big_floor_hack(x, y, z);
+
     uint32_t groupCount = level_get_all_surface_group_count();
     for( int i = 0; i < groupCount; ++i ) {
     uint32_t surfCount = level_get_all_surface_group_size( i );
