@@ -11,7 +11,7 @@
 
 #include "debug_print.h"
 
-#define BIG_HACK_FLOOR_HEIGHT 1000
+#define BIG_HACK_FLOOR_HEIGHT 100000
 #define BIG_HACK_FLOOR_DIMENSIONS 1000
 
 static uint32_t s_level_rooms_count = 0;
@@ -57,6 +57,10 @@ void create_big_floor_hack()
 
 void level_update_big_floor_hack(float x, float y, float z)
 {
+    if(s_big_floor_hack1==NULL || s_big_floor_hack2==NULL)
+    {
+        return;
+    }
     int height = y-BIG_HACK_FLOOR_HEIGHT;
 
     s_big_floor_hack1->vertex1[0] = x-BIG_HACK_FLOOR_DIMENSIONS;
