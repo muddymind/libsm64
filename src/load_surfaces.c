@@ -442,9 +442,14 @@ void level_unload_room(uint32_t roomId)
 
     if( room->staticObjectSurfaces != NULL )
     {
-        if(room->staticObjectSurfaces->transform!=NULL)
+        struct SurfaceObjectTransform *previousTransform=NULL;
+        for(int i=0; i<room->staticObjectSurfacesCount; i++)
         {
-            free(room->staticObjectSurfaces->transform);
+            if(room->staticObjectSurfaces[i].transform!=NULL && room->staticObjectSurfaces[i].transform != previousTransform)
+            {
+                previousTransform = room->staticObjectSurfaces[i].transform;
+                free(room->staticObjectSurfaces[i].transform);
+            }
         }
         free(room->staticObjectSurfaces);
         room->staticObjectSurfaces = NULL;
