@@ -442,6 +442,10 @@ void level_unload_room(uint32_t roomId)
 
     if( room->staticObjectSurfaces != NULL )
     {
+        if(room->staticObjectSurfaces->transform!=NULL)
+        {
+            free(room->staticObjectSurfaces->transform);
+        }
         free(room->staticObjectSurfaces);
         room->staticObjectSurfaces = NULL;
     }
@@ -497,10 +501,8 @@ void level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, 
 
 
     room->staticObjectSurfacesCount=0;
-    int acc=0;
     for(int i=0; i<staticObjectsCount; i++)
     {
-        acc+=staticObjects[i].surfaceCount;
         room->staticObjectSurfacesCount+=staticObjects[i].surfaceCount;
     }
     room->staticObjectSurfaces = malloc( sizeof( struct Surface ) * room->staticObjectSurfacesCount );
@@ -508,11 +510,11 @@ void level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, 
     uint32_t cIdx=0;
     for(int i=0; i<staticObjectsCount; i++)
     {
-        struct SurfaceObjectTransform transform;
-        init_transform( &transform, &(staticObjects[i].transform) );
+        struct SurfaceObjectTransform *transform = (struct SurfaceObjectTransform*)malloc(sizeof(struct SurfaceObjectTransform));
+        init_transform( transform, &(staticObjects[i].transform) );
         for(int j=0; j<staticObjects[i].surfaceCount;j++)
         {
-            engine_surface_from_lib_surface( &room->staticObjectSurfaces[cIdx], &staticObjects[i].surfaces[j], &transform );
+            engine_surface_from_lib_surface( &room->staticObjectSurfaces[cIdx], &staticObjects[i].surfaces[j], transform );
             room->staticObjectSurfaces[cIdx].room=1;
             cIdx++;
         }
