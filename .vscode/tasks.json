@@ -1,0 +1,21 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "compilemake",
+            "type": "shell",
+            "command": "make"
+        },
+        {
+            "label": "compileanddeploy",
+            "command": "xcopy .\\dist\\sm64.dll ..\\..\\..\\bin\\sm64.dll /Y",
+            "args": [],
+            "type": "shell",
+            "dependsOn": [
+                "compilemake"
+            ]
+        }
+    ]
+}

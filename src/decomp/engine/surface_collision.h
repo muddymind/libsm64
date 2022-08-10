@@ -1,6 +1,8 @@
 #ifndef SURFACE_COLLISION_H
 #define SURFACE_COLLISION_H
 
+#include <stdbool.h>
+#include <stdlib.h>
 #include "../include/PR/ultratypes.h"
 
 #include "../include/types.h"
@@ -39,5 +41,6 @@ f32 find_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor);
 f32 find_water_level(f32 x, f32 z);
 f32 find_poison_gas_level(f32 x, f32 z);
 struct Surface **get_all_geometry(int *count);
+struct Surface **get_dynamic_geometry(int *count);
 
 #endif // SURFACE_COLLISION_H

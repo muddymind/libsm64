@@ -11,21 +11,28 @@
 
 #include "debug_print.h"
 
-struct LoadedSurfaceObject
-{
-    struct SurfaceObjectTransform *transform;
-    uint32_t surfaceCount;
-    struct SM64Surface *libSurfaces;
-    struct Surface *engineSurfaces;
-};
+#define BIG_HACK_FLOOR_HEIGHT 100000
+#define BIG_HACK_FLOOR_DIMENSIONS 1000
+#define MAX_MARIO_PLAYERS 10
 
-static uint32_t s_static_surface_count = 0;
-static struct Surface *s_static_surface_list = NULL;
 
-static uint32_t s_surface_object_count = 0;
-static struct LoadedSurfaceObject *s_surface_object_list = NULL;
+static uint32_t s_level_rooms_count = 0;
+
+static struct Room **s_level_rooms=NULL;
+
+static struct MarioLoadedRooms s_mario_loaded_rooms[MAX_MARIO_PLAYERS];
+static struct MarioLoadedRooms *s_current_loaded_rooms;
+
+static struct DynamicObjects *s_dynamic_objects = NULL;
+
+static struct Room *s_big_floor_hack = NULL;
+
+static bool s_level_loaded = false;
+
 
 #define CONVERT_ANGLE( x ) ((s16)( -(x) / 180.0f * 32768.0f ))
+
+#pragma region Auxiliary Funcitons
 
 static void init_transform( struct SurfaceObjectTransform *out, const struct SM64ObjectTransform *in )
 {
@@ -208,47 +215,28 @@ static void engine_surface_from_lib_surface( struct Surface *surface, const stru
     surface->isValid = 1;
 }
 
-uint32_t loaded_surface_iter_group_count( void )
+#pragma endregion
+
+#pragma region Dynamic objects management
+
+void level_init_dynamic_objects()
 {
-    return 1 + s_surface_object_count;
+    s_dynamic_objects = (struct DynamicObjects*) malloc(sizeof(struct DynamicObjects));
+
+    s_dynamic_objects->objects = NULL;
+    s_dynamic_objects->objectsCount = 0;
+    s_dynamic_objects->cached_surfaces = NULL;
+    s_dynamic_objects->cached_count = 0;
 }
 
-uint32_t loaded_surface_iter_group_size( uint32_t groupIndex )
-{
-    if( groupIndex == 0 )
-        return s_static_surface_count;
-
-    return s_surface_object_list[ groupIndex - 1 ].surfaceCount;
-}
-
-struct Surface *loaded_surface_iter_get_at_index( uint32_t groupIndex, uint32_t surfaceIndex )
-{
-    if( groupIndex == 0 )
-        return &s_static_surface_list[ surfaceIndex ];
-
-    return &s_surface_object_list[ groupIndex - 1 ].engineSurfaces[ surfaceIndex ];
-}
-
-void surfaces_load_static( const struct SM64Surface *surfaceArray, uint32_t numSurfaces )
-{
-    if( s_static_surface_list != NULL )
-        free( s_static_surface_list );
-
-    s_static_surface_count = numSurfaces;
-    s_static_surface_list = malloc( sizeof( struct Surface ) * numSurfaces );
-
-    for( int i = 0; i < numSurfaces; ++i )
-        engine_surface_from_lib_surface( &s_static_surface_list[i], &surfaceArray[i], NULL );
-}
-
-uint32_t surfaces_load_object( const struct SM64SurfaceObject *surfaceObject )
+uint32_t level_load_dynamic_object( const struct SM64SurfaceObject *surfaceObject )
 {
     bool pickedOldIndex = false;
-    uint32_t idx = s_surface_object_count;
+    uint32_t idx = s_dynamic_objects->objectsCount;
 
-    for( int i = 0; i < s_surface_object_count; ++i )
+    for( int i = 0; i < s_dynamic_objects->objectsCount; ++i )
     {
-        if( s_surface_object_list[i].surfaceCount == 0 )
+        if( s_dynamic_objects->objects[i].surfaceCount == 0 )
         {
             pickedOldIndex = true;
             idx = i;
@@ -258,12 +246,12 @@ uint32_t surfaces_load_object( const struct SM64SurfaceObject *surfaceObject )
 
     if( !pickedOldIndex )
     {
-        idx = s_surface_object_count;
-        s_surface_object_count++;
-        s_surface_object_list = realloc( s_surface_object_list, s_surface_object_count * sizeof( struct LoadedSurfaceObject ));
+        idx = s_dynamic_objects->objectsCount;
+        s_dynamic_objects->objectsCount++;
+        s_dynamic_objects->objects = realloc( s_dynamic_objects->objects, s_dynamic_objects->objectsCount * sizeof( struct LoadedSurfaceObject ));
     }
 
-    struct LoadedSurfaceObject *obj = &s_surface_object_list[idx];
+    struct LoadedSurfaceObject *obj = &s_dynamic_objects->objects[idx];
 
     obj->surfaceCount = surfaceObject->surfaceCount;
 
@@ -275,63 +263,623 @@ uint32_t surfaces_load_object( const struct SM64SurfaceObject *surfaceObject )
 
     obj->engineSurfaces = malloc( obj->surfaceCount * sizeof( struct Surface ));
     for( int i = 0; i < obj->surfaceCount; ++i )
+    {
         engine_surface_from_lib_surface( &obj->engineSurfaces[i], &obj->libSurfaces[i], obj->transform );
+        obj->engineSurfaces[i].eSurfaceType = EXTERNAL_SURFACE_TYPE_DYNAMIC_OBJECT;
+    }
+
+    level_update_cached_object_surface_list();
+
+    #ifdef DEBUG_LEVEL_ROOMS
+        printf("Added Collider %d\n", idx);
+    #endif
 
     return idx;
 }
 
-void surfaces_unload_object( uint32_t objId )
+void level_unload_dynamic_object( uint32_t objId, bool update_cache )
 {
-    if( objId >= s_surface_object_count || s_surface_object_list[objId].surfaceCount == 0 )
+    if( objId >= s_dynamic_objects->objectsCount || s_dynamic_objects->objects[objId].surfaceCount == 0 )
     {
         DEBUG_PRINT("Tried to unload non-existant surface object with ID: %u", objId);
         return;
     }
 
-    free( s_surface_object_list[objId].transform );
-    free( s_surface_object_list[objId].libSurfaces );
-    free( s_surface_object_list[objId].engineSurfaces );
+    free( s_dynamic_objects->objects[objId].transform );
+    free( s_dynamic_objects->objects[objId].libSurfaces );
+    free( s_dynamic_objects->objects[objId].engineSurfaces );
 
-    s_surface_object_list[objId].surfaceCount = 0;
-    s_surface_object_list[objId].transform = NULL;
-    s_surface_object_list[objId].libSurfaces = NULL;
-    s_surface_object_list[objId].engineSurfaces = NULL;
+    s_dynamic_objects->objects[objId].surfaceCount = 0;
+    s_dynamic_objects->objects[objId].transform = NULL;
+    s_dynamic_objects->objects[objId].libSurfaces = NULL;
+    s_dynamic_objects->objects[objId].engineSurfaces = NULL;
+
+    #ifdef DEBUG_LEVEL_ROOMS
+        printf("Removed Collider %d\n", objId);
+    #endif
+
+    if(update_cache)
+    {
+        level_update_cached_object_surface_list();
+    }
 }
 
-void surface_object_update_transform( uint32_t objId, const struct SM64ObjectTransform *newTransform )
+void level_unload_all_dynamic_objects()
 {
-    if( objId >= s_surface_object_count || s_surface_object_list[objId].surfaceCount == 0 )
+    if(s_dynamic_objects==NULL)
+    {
+        return;
+    }
+    if(s_dynamic_objects->objects!=NULL)
+    {
+        for( int i = 0; i < s_dynamic_objects->objectsCount; ++i )
+        {
+            level_unload_dynamic_object(i, false);
+        }
+        free( s_dynamic_objects->objects );
+        s_dynamic_objects->objects = NULL;
+        s_dynamic_objects->objectsCount = 0;
+    }
+
+    if(s_dynamic_objects->cached_surfaces != NULL)
+    {
+        free(s_dynamic_objects->cached_surfaces);
+        s_dynamic_objects->cached_surfaces = NULL;
+        s_dynamic_objects->cached_count = 0;
+    }
+
+    free(s_dynamic_objects);
+    s_dynamic_objects = NULL;
+}
+
+void level_update_cached_object_surface_list()
+{
+    if(s_dynamic_objects->cached_surfaces!=NULL)
+    {
+        free(s_dynamic_objects->cached_surfaces);
+        s_dynamic_objects->cached_surfaces=NULL;
+        s_dynamic_objects->cached_count = 0;
+    }
+
+    s_dynamic_objects->cached_count=0;
+
+    for(int i=0; i<s_dynamic_objects->objectsCount; i++)
+    {
+        s_dynamic_objects->cached_count+=s_dynamic_objects->objects[i].surfaceCount;
+    }
+
+    //make space for big floor surfaces
+    if(s_big_floor_hack!=NULL)
+        s_dynamic_objects->cached_count+=s_big_floor_hack->count;
+    
+    s_dynamic_objects->cached_surfaces = (struct Surface**)malloc(sizeof(struct Surface*)*s_dynamic_objects->cached_count);
+
+    int currentIdx=0;
+    for(int i=0; i<s_dynamic_objects->objectsCount; i++)
+    {
+        for(int j=0; j<s_dynamic_objects->objects[i].surfaceCount; j++)
+        {
+            s_dynamic_objects->cached_surfaces[currentIdx++] = &(s_dynamic_objects->objects[i].engineSurfaces[j]);
+        }
+    }
+
+    if(s_big_floor_hack!=NULL)
+    {
+        for(int i=0; i< s_big_floor_hack->count; i++)
+        {
+            s_dynamic_objects->cached_surfaces[currentIdx++]=&(s_big_floor_hack->surfaces[i]);
+        }
+    }
+}
+
+void level_update_dynamic_object_transform( uint32_t objId, const struct SM64ObjectTransform *newTransform )
+{
+    if( objId >= s_dynamic_objects->objectsCount || s_dynamic_objects->objects[objId].surfaceCount == 0 )
     {
         DEBUG_PRINT("Tried to update non-existant surface object with ID: %u", objId);
         return;
     }
 
-    update_transform( s_surface_object_list[objId].transform, newTransform );
-    for( int i = 0; i < s_surface_object_list[objId].surfaceCount; ++i )
+    update_transform( s_dynamic_objects->objects[objId].transform, newTransform );
+    for( int i = 0; i < s_dynamic_objects->objects[objId].surfaceCount; ++i )
     {
-        struct LoadedSurfaceObject *obj = &s_surface_object_list[objId];
+        struct LoadedSurfaceObject *obj = &s_dynamic_objects->objects[objId];
         engine_surface_from_lib_surface( &obj->engineSurfaces[i], &obj->libSurfaces[i], obj->transform );
     }
 }
 
-struct SurfaceObjectTransform *surfaces_object_get_transform_ptr( uint32_t objId )
+struct SurfaceObjectTransform *level_get_dynamic_object_transform( uint32_t objId )
 {
-    if( objId >= s_surface_object_count || s_surface_object_list[objId].surfaceCount == 0 )
+    if( s_dynamic_objects->objectsCount || s_dynamic_objects->objects[objId].surfaceCount == 0 )
         return NULL;
 
-    return s_surface_object_list[objId].transform;
+    return s_dynamic_objects->objects[objId].transform;
 }
 
-void surfaces_unload_all( void )
+#pragma endregion
+
+#pragma region Room management
+
+void level_init_rooms(int roomsCount)
 {
-    free( s_static_surface_list );
-    s_static_surface_count = 0;
-    s_static_surface_list = NULL;
-
-    for( int i = 0; i < s_surface_object_count; ++i )
-        surfaces_unload_object( i );
-
-    free( s_surface_object_list );
-    s_surface_object_count = 0;
-    s_surface_object_list = NULL;
+    s_level_rooms_count = roomsCount;
+    s_level_rooms = (struct Room**)malloc(sizeof(struct Room*)*roomsCount);
+    for(uint32_t i=0; i<roomsCount; i++)
+    {
+        s_level_rooms[i]=NULL;
+    }
 }
+
+void level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces, const struct SM64SurfaceObject *staticObjects, uint32_t staticObjectsCount) 
+{
+    if( !s_level_loaded || s_level_rooms == NULL )
+    {
+        #ifdef DEBUG_LEVEL_ROOMS
+            printf("SM64: tried to load room %d into non-loaded level.\n", roomId);
+        #endif
+        return;
+    }
+
+    if(roomId >= s_level_rooms_count )
+    {
+        #ifdef DEBUG_LEVEL_ROOMS
+            printf("SM64: tried to load room %d when there's only space for %d rooms.\n", roomId, s_level_rooms_count);
+        #endif
+        return;
+    }
+
+    if(s_level_rooms[roomId] != NULL)
+    {
+        #ifdef DEBUG_LEVEL_ROOMS
+            printf("SM64: tried to reload room %d that was already loaded.\n", roomId);
+        #endif
+        return;
+    }
+
+    #ifdef DEBUG_LEVEL_ROOMS
+		printf("SM64: loading room %d\n", roomId);
+    #endif
+
+    struct Room *room = (struct Room*)malloc(sizeof(struct Room));
+    s_level_rooms[roomId] = room;
+
+    room->count = numSurfaces;
+    for(int i=0; i<staticObjectsCount; i++)
+    {
+        room->count += staticObjects[i].surfaceCount;
+    }
+    room->surfaces = malloc( sizeof( struct Surface ) * room->count );
+
+    for( uint32_t i = 0; i < numSurfaces; ++i )
+    {
+        engine_surface_from_lib_surface( &room->surfaces[i], &staticSurfaces[i], NULL );
+        room->surfaces[i].eSurfaceType = EXTERNAL_SURFACE_TYPE_STATIC_SURFACE;
+    }
+
+    uint32_t cIdx=numSurfaces;
+    for(int i=0; i<staticObjectsCount; i++)
+    {
+        struct SurfaceObjectTransform *transform = (struct SurfaceObjectTransform*)malloc(sizeof(struct SurfaceObjectTransform));
+        init_transform( transform, &(staticObjects[i].transform) );
+        for(int j=0; j<staticObjects[i].surfaceCount;j++)
+        {
+            engine_surface_from_lib_surface( &room->surfaces[cIdx], &staticObjects[i].surfaces[j], transform );
+            room->surfaces[cIdx].eSurfaceType = EXTERNAL_SURFACE_TYPE_STATIC_MESH;
+            cIdx++;
+        }
+    }
+}
+
+void level_unload_all_rooms()
+{
+    if(s_level_rooms!=NULL)
+    {
+        for(uint32_t i=0; i<s_level_rooms_count; i++)
+        {
+            level_unload_room(i);
+        }
+
+        free(s_level_rooms);
+        s_level_rooms=NULL;
+        s_level_rooms_count = 0;
+    }
+}
+
+void level_unload_room(uint32_t roomId)
+{
+    #ifdef DEBUG_LEVEL_ROOMS
+		printf("SM64: unloading room %d\n", roomId);
+    #endif
+    
+    if( s_level_rooms==NULL || roomId >= s_level_rooms_count )
+    {
+        return;
+    }
+
+    struct Room *room = s_level_rooms[roomId];
+    s_level_rooms[roomId] = NULL;
+
+    if(room == NULL)
+    {
+        return;
+    }
+
+    if( room->surfaces != NULL )
+    {
+        struct SurfaceObjectTransform *previousTransform=NULL;
+        for(int i=0; i<room->count; i++)
+        {
+            if(room->surfaces[i].transform!=NULL && room->surfaces[i].transform != previousTransform)
+            {
+                previousTransform = room->surfaces[i].transform;
+                free(room->surfaces[i].transform);
+            }
+        }
+        free(room->surfaces);
+        room->surfaces = NULL;
+    }
+
+    free(room);
+    s_level_rooms[roomId]=NULL;
+}
+
+void level_rooms_switch(int switchedRooms[][2], int switchedRoomsCount)
+{
+    for(int i=0; i<switchedRoomsCount; i++)
+    {
+        int src = switchedRooms[i][0];
+        int dst = switchedRooms[i][1];
+
+        #ifdef DEBUG_LEVEL_ROOMS
+            printf("SM64: Switched room %d with room %d\n", src, dst);
+        #endif
+
+        // If the room we are about to unload was active in wither player we need to keep the loaded rooms updated to the new pointer
+        int idx_in_loaded_room[MAX_MARIO_PLAYERS];        
+        for(int i=0; i<MAX_MARIO_PLAYERS; i++)
+        {
+            idx_in_loaded_room[i]=-1;
+
+            if(s_mario_loaded_rooms[i].marioId==-1){
+                continue;
+            }
+
+            for(int j=0; j<s_mario_loaded_rooms[i].count; j++)
+            {
+                if(s_level_rooms[src] == s_mario_loaded_rooms[i].rooms[j])
+                {
+                    idx_in_loaded_room[i] = j;
+                    break;
+                }
+            }
+        }
+
+        struct Room* tmp = s_level_rooms[src];
+        s_level_rooms[src] = s_level_rooms[dst];
+
+        // if the src room was activated in either player we need to switch it to the new one
+        for(int i=0; i<MAX_MARIO_PLAYERS; i++)
+        {
+            if(idx_in_loaded_room[i]>=0)
+            {
+                s_mario_loaded_rooms[i].rooms[idx_in_loaded_room[i]] = s_level_rooms[src];
+            }
+        }
+
+        s_level_rooms[dst] = tmp;
+    }
+}
+
+#pragma endregion
+
+#pragma region Level management
+
+bool level_init(uint32_t roomsCount)
+{
+    #ifdef DEBUG_LEVEL_ROOMS
+        printf("SM64: init level\n");
+    #endif
+    if(s_level_loaded)
+    {
+        printf("SM64: Aborted trying to load a level already loaded.");
+        return false;
+    }
+    
+    level_init_rooms(roomsCount);
+    level_init_player_loaded_rooms();
+    level_init_dynamic_objects();
+    level_init_big_floor_hack();
+    level_update_cached_object_surface_list();
+
+    s_level_loaded = true;
+
+    return true;
+}
+
+void level_unload()
+{
+    #ifdef DEBUG_LEVEL_ROOMS
+        printf("SM64: unload level\n");
+    #endif
+
+    s_level_loaded=false;
+
+    level_unload_all_rooms();
+
+    level_unload_all_player_loaded_rooms();
+
+    level_unload_all_dynamic_objects();
+
+    level_unload_big_floor_hack();
+}
+
+
+#pragma endregion
+
+#pragma region Player Loaded Rooms
+
+void level_init_player_loaded_rooms()
+{
+    for(int i=0; i<MAX_MARIO_PLAYERS; i++)
+    {
+        s_mario_loaded_rooms[i].marioId=-1;
+        s_mario_loaded_rooms[i].count=0;
+        s_mario_loaded_rooms[i].rooms=NULL;
+    }
+}
+
+void level_load_player_loaded_rooms(int marioId)
+{
+    for(int i=0; i<MAX_MARIO_PLAYERS; i++)
+    {
+        if(s_mario_loaded_rooms[i].marioId == -1)
+        {
+            s_mario_loaded_rooms[i].marioId = marioId;
+            s_mario_loaded_rooms[i].count=0;
+            s_mario_loaded_rooms[i].rooms=(struct Room**)malloc((sizeof(struct Room*) * s_level_rooms_count));
+            s_current_loaded_rooms = &(s_mario_loaded_rooms[i]);
+            return;
+        }
+    }
+}
+
+void level_unload_player_loaded_rooms(int marioId)
+{
+    for(int i=0; i<MAX_MARIO_PLAYERS; i++)
+    {
+        if(s_mario_loaded_rooms[i].marioId == marioId)
+        {
+            s_mario_loaded_rooms[i].marioId=-1;
+            s_mario_loaded_rooms[i].count=0;
+            if(s_mario_loaded_rooms[i].rooms!=NULL){
+                free(s_mario_loaded_rooms[i].rooms);
+                s_mario_loaded_rooms[i].rooms=NULL;
+            }
+            s_current_loaded_rooms = NULL;
+        }
+    }
+}
+
+void level_unload_all_player_loaded_rooms()
+{
+    s_current_loaded_rooms = NULL;
+    for(int i=0; i<MAX_MARIO_PLAYERS; i++)
+    {
+        s_mario_loaded_rooms[i].marioId=-1;
+        s_mario_loaded_rooms[i].count=0;
+        if(s_mario_loaded_rooms[i].rooms!=NULL){
+            free(s_mario_loaded_rooms[i].rooms);
+            s_mario_loaded_rooms[i].rooms=NULL;
+        }
+    }
+}
+
+void level_update_player_loaded_Rooms(int marioId, int *newloadedRooms, int loadedCount)
+{
+    for(int i=0; i<MAX_MARIO_PLAYERS; i++)
+    {
+        if(s_mario_loaded_rooms[i].marioId == marioId)
+        {
+            struct MarioLoadedRooms *loadedRooms = &(s_mario_loaded_rooms[i]);
+            if(loadedRooms->rooms == NULL || loadedCount==0)
+            {
+                return;
+            }
+            loadedRooms->count=0;
+            for(uint32_t i=0; i<loadedCount; i++)
+            {
+                loadedRooms->rooms[loadedRooms->count++]=s_level_rooms[newloadedRooms[i]];
+            }
+        }
+    }
+}
+
+void level_set_active_mario(int marioId)
+{
+    if(s_current_loaded_rooms!=NULL && s_current_loaded_rooms->marioId==marioId)
+    {
+        return;
+    }
+    for(int i=0; i<MAX_MARIO_PLAYERS; i++)
+    {
+        if(s_mario_loaded_rooms[i].marioId==marioId)
+        {
+            s_current_loaded_rooms = &(s_mario_loaded_rooms[i]);
+        }
+    }
+}
+
+#pragma endregion
+
+#pragma region Big Floor Hack
+
+void level_init_big_floor_hack()
+{
+    s_big_floor_hack = (struct Room*) malloc(sizeof(struct Room));
+    
+    s_big_floor_hack->count=2;
+
+    s_big_floor_hack->surfaces = (struct Surface*) malloc(sizeof(struct Surface)*s_big_floor_hack->count);
+
+    for(int i=0; i<s_big_floor_hack->count; i++)
+    {
+        level_load_big_floor_hack(&(s_big_floor_hack->surfaces[0]));
+        level_load_big_floor_hack(&(s_big_floor_hack->surfaces[1]));
+    }
+
+    level_update_big_floor_hack(0.0f, 0.0f, 0.0f);
+}
+
+void level_unload_big_floor_hack()
+{
+    if( s_big_floor_hack == NULL )
+    {
+        return;
+    }
+
+    if( s_big_floor_hack->surfaces!=NULL ) 
+    {
+        free(s_big_floor_hack->surfaces);
+        s_big_floor_hack->surfaces=NULL;
+    }
+
+    s_big_floor_hack->count=0;
+
+    free(s_big_floor_hack);
+    s_big_floor_hack = NULL;
+}
+
+void level_load_big_floor_hack(struct Surface *surf)
+{
+    surf->room=-1;
+    surf->isValid = 1;
+    surf->force=0;
+    surf->transform = NULL;
+    surf->type = TERRAIN_STONE;
+    surf->flags = (s8) 0;
+
+    surf->normal.x = 0.0f;
+    surf->normal.y = 1.0f;
+    surf->normal.z = 0.0f;
+}
+
+void level_update_big_floor_hack(float x, float y, float z)
+{
+    if(s_big_floor_hack==NULL || s_big_floor_hack->surfaces==NULL)
+    {
+        return;
+    }
+    int height = y-BIG_HACK_FLOOR_HEIGHT;
+
+    struct Surface *big_floor_hack1 = &(s_big_floor_hack->surfaces[0]);
+    struct Surface *big_floor_hack2 = &(s_big_floor_hack->surfaces[1]);
+
+    big_floor_hack1->vertex1[0] = x-BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack1->vertex2[0] = x-BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack1->vertex3[0] = x+BIG_HACK_FLOOR_DIMENSIONS;
+
+    big_floor_hack2->vertex1[0] = x-BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack2->vertex2[0] = x+BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack2->vertex3[0] = x+BIG_HACK_FLOOR_DIMENSIONS;
+
+    big_floor_hack1->vertex1[1] = height;
+    big_floor_hack1->vertex2[1] = height;
+    big_floor_hack1->vertex3[1] = height;
+
+    big_floor_hack2->vertex1[1] = height;
+    big_floor_hack2->vertex2[1] = height;
+    big_floor_hack2->vertex3[1] = height;
+
+    big_floor_hack1->vertex1[2] = z-BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack1->vertex2[2] = z+BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack1->vertex3[2] = z+BIG_HACK_FLOOR_DIMENSIONS;
+
+    big_floor_hack2->vertex1[2] = z-BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack2->vertex2[2] = z+BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack2->vertex3[2] = z-BIG_HACK_FLOOR_DIMENSIONS;
+
+    big_floor_hack1->originOffset = -height;
+    big_floor_hack2->originOffset = -height;
+
+    big_floor_hack1->lowerY = height;
+    big_floor_hack2->upperY = height;
+}
+
+#pragma endregion
+
+#pragma region Counts and Surfaces getters
+
+/**
+ * @brief Gets the number of activated rooms for the current Mario +1 for the dynamic objects.
+ * 
+ * @return uint32_t
+ */
+uint32_t level_get_room_count(void)
+{
+    return s_current_loaded_rooms->count+1;
+}
+
+/**
+ * @brief Gets the number of surfaces contained by the given selected activated room.
+ * If the roomIndex is the last one it will correspond to the dynamic objects surfaces.
+ * 
+ * @param roomIndex activated room index from which to get the number of surfaces.
+ * @return uint32_t
+ */
+uint32_t level_get_room_surfaces_count(uint32_t roomIndex)
+{
+    if(roomIndex == s_current_loaded_rooms->count){
+        if(s_dynamic_objects){
+            return s_dynamic_objects->cached_count;
+        }
+        return 0; //dynamic objects still weren't loaded
+    }
+
+    return s_current_loaded_rooms->rooms[roomIndex]->count;
+}
+
+/**
+ * @brief Gets a surface from the given selected activated room.
+ * If the roomIndex is the last one it will correspond to the dynamic objects surfaces.
+ * 
+ * @param roomIndex activated room index from which to get the surface.
+ * @param surfaceIndex surface index to get from the given activated room.
+ * @return struct Surface*
+ */
+struct Surface *level_get_room_surface(uint32_t roomIndex, uint32_t surfaceIndex)
+{
+    if(roomIndex == s_current_loaded_rooms->count){
+        return s_dynamic_objects->cached_surfaces[surfaceIndex];
+    }
+
+    return &(s_current_loaded_rooms->rooms[roomIndex]->surfaces[surfaceIndex]);
+}
+
+struct Surface **level_get_all_loaded_surfaces(int *resultCount)
+{
+    *resultCount = 0;
+    for(int i=0; i<s_current_loaded_rooms->count; i++)
+    {
+        *resultCount+=s_current_loaded_rooms->rooms[i]->count;
+    }
+    *resultCount+=s_dynamic_objects->cached_count;
+
+    struct Surface **result=(struct Surface **)malloc(sizeof(struct Surface *)*(*resultCount));
+
+    int idx=0;
+    for(int i=0;i<s_current_loaded_rooms->count;i++)
+    {
+        for(int j=0; j<s_current_loaded_rooms->rooms[i]->count; j++)
+        {
+            result[idx++]=&(s_current_loaded_rooms->rooms[i]->surfaces[j]);
+        }
+    }
+
+    for(int i=0; i<s_dynamic_objects->cached_count; i++)
+    {
+        result[idx++]=s_dynamic_objects->cached_surfaces[i];
+    }
+    return result;
+}
+
+#pragma endregion

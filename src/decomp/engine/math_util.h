@@ -47,6 +47,8 @@ void *vec3f_to_vec3s(Vec3s dest, Vec3f a);
 void *vec3i_copy(Vec3i dest, Vec3i src);
 void *vec3i_set(Vec3i dest, s32 x, s32 y, s32 z);
 void *vec3i_reset(Vec3i dest, s32 value);
+void *vec3i2f_copy(Vec3f dest, Vec3i src);
+void *vec3f_reset(Vec3f dest, f32 value);
 void *find_vector_perpendicular_to_plane(Vec3f dest, Vec3f a, Vec3f b, Vec3f c);
 void *vec3f_cross(Vec3f dest, Vec3f a, Vec3f b);
 void *vec3f_normalize(Vec3f dest);
@@ -75,7 +77,6 @@ f32 atan2f(f32 a, f32 b);
 void spline_get_weights(Vec4f result, f32 t, UNUSED s32 c);
 void anim_spline_init(Vec4s *keyFrames);
 s32 anim_spline_poll(Vec3f result);
-
 
 // From object_helpers.c
 void linear_mtxf_mul_vec3f(Mat4 m, Vec3f dst, Vec3f v);

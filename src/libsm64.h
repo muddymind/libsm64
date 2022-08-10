@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "decomp/include/external_types.h"
 
 #ifdef _WIN32
     #ifdef SM64_LIB_EXPORT
@@ -29,19 +30,6 @@ struct SM64MarioInputs
     float camLookX, camLookZ;
     float stickX, stickY;
     uint8_t buttonA, buttonB, buttonZ;
-};
-
-struct SM64ObjectTransform
-{
-    float position[3];
-    float eulerRotation[3];
-};
-
-struct SM64SurfaceObject
-{
-    struct SM64ObjectTransform transform;
-    uint32_t surfaceCount;
-    struct SM64Surface *surfaces;
 };
 
 struct SM64MarioState
@@ -109,15 +97,6 @@ struct SM64AnimInfo
 	int32_t animAccel;
 };
 
-struct SM64DebugSurface
-{
-    int v1[3];
-    int v2[3];
-    int v3[3];
-    float normaly;
-    uintptr_t surfacePointer;
-};
-
 typedef void (*SM64DebugPrintFunctionPtr)( const char * );
 
 enum
@@ -130,10 +109,8 @@ enum
 extern SM64_LIB_FN void sm64_global_init( uint8_t *rom, uint8_t *outTexture, SM64DebugPrintFunctionPtr debugPrintFunction );
 extern SM64_LIB_FN void sm64_global_terminate( void );
 
-extern SM64_LIB_FN void sm64_static_surfaces_load( const struct SM64Surface *surfaceArray, uint32_t numSurfaces );
-
-extern SM64_LIB_FN int32_t sm64_mario_create( float x, float y, float z, int16_t rx, int16_t ry, int16_t rz, uint8_t fake );
-extern SM64_LIB_FN void sm64_mario_tick( int32_t marioId, const struct SM64MarioInputs *inputs, struct SM64MarioState *outState, struct SM64MarioGeometryBuffers *outBuffers );
+extern SM64_LIB_FN int32_t sm64_mario_create( float x, float y, float z, int16_t rx, int16_t ry, int16_t rz, uint8_t fake, int *loadedRooms, int loadedCount);
+extern SM64_LIB_FN void sm64_mario_tick(int32_t marioId, const struct SM64MarioInputs *inputs, struct SM64MarioState *outState, struct SM64MarioGeometryBuffers *outBuffers );
 extern SM64_LIB_FN struct SM64AnimInfo* sm64_mario_get_anim_info( int32_t marioId, int16_t rot[3] );
 extern SM64_LIB_FN void sm64_mario_anim_tick( int32_t marioId, uint32_t stateFlags, struct SM64AnimInfo* animInfo, struct SM64MarioGeometryBuffers *outBuffers, int16_t rot[3] );
 extern SM64_LIB_FN void sm64_mario_delete( int32_t marioId );
@@ -173,10 +150,18 @@ extern SM64_LIB_FN void sm64_play_sound(int32_t soundBits, float *pos);
 extern SM64_LIB_FN void sm64_play_sound_global(int32_t soundBits);
 extern SM64_LIB_FN int sm64_get_version();
 
-extern SM64_LIB_FN void sm64_get_collision_surfaces(struct SM64DebugSurface *floor, struct SM64DebugSurface *ceiling, struct SM64DebugSurface *wall);
-extern SM64_LIB_FN struct SM64DebugSurface *sm64_get_all_surfaces(int *surfacesCount);
+extern SM64_LIB_FN void sm64_get_collision_surfaces(int marioId, struct SM64DebugSurface *floor, struct SM64DebugSurface *ceiling, struct SM64DebugSurface *wall, struct SM64DebugSurface surfaces[]);
+extern SM64_LIB_FN int sm64_get_collision_surfaces_count(int marioId);
 
 void audio_tick();
 void* audio_thread(void* param);
+
+extern SM64_LIB_FN void sm64_level_init(uint32_t roomsCount);
+extern SM64_LIB_FN void sm64_level_unload();
+extern SM64_LIB_FN void sm64_level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces, const struct SM64SurfaceObject *staticObjects, uint32_t staticObjectsCount);
+extern SM64_LIB_FN void sm64_level_unload_room(uint32_t roomId);
+extern SM64_LIB_FN void sm64_level_update_loaded_rooms_list(int marioId, int *loadedRooms, int loadedCount);
+extern SM64_LIB_FN void sm64_level_rooms_switch(int switchedRooms[][2], int switchedRoomsCount);
+extern SM64_LIB_FN void level_set_active_mario(int marioId);
 
 #endif//LIB_SM64_H
