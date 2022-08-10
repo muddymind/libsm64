@@ -194,9 +194,11 @@ SM64_LIB_FN void sm64_global_terminate( void )
 //     surfaces_load_static( surfaceArray, numSurfaces );
 // }
 
-SM64_LIB_FN int32_t sm64_mario_create( float x, float y, float z, int16_t rx, int16_t ry, int16_t rz, uint8_t fake )
+SM64_LIB_FN int32_t sm64_mario_create( float x, float y, float z, int16_t rx, int16_t ry, int16_t rz, uint8_t fake, int *loadedRooms, int loadedCount)
 {
     int32_t marioIndex = obj_pool_alloc_index( &s_mario_instance_pool, sizeof( struct MarioInstance ));
+	level_load_player_loaded_rooms(marioIndex);
+	level_update_player_loaded_Rooms(marioIndex, loadedRooms, loadedCount);
     struct MarioInstance *newInstance = s_mario_instance_pool.objects[marioIndex];
 
     newInstance->globalState = global_state_create();
@@ -272,6 +274,7 @@ SM64_LIB_FN void sm64_mario_anim_tick( int32_t marioId, uint32_t stateFlags, str
         DEBUG_PRINT("Tried to tick non-existant Mario with ID: %u", marioId);
         return;
     }
+	level_set_active_mario(marioId);
 
 	struct GlobalState *state = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
     global_state_bind( state );
@@ -292,13 +295,14 @@ SM64_LIB_FN void sm64_mario_anim_tick( int32_t marioId, uint32_t stateFlags, str
 }
 
 
-SM64_LIB_FN void sm64_mario_tick( int32_t marioId, const struct SM64MarioInputs *inputs, struct SM64MarioState *outState, struct SM64MarioGeometryBuffers *outBuffers )
+SM64_LIB_FN void sm64_mario_tick(int32_t marioId, const struct SM64MarioInputs *inputs, struct SM64MarioState *outState, struct SM64MarioGeometryBuffers *outBuffers )
 {
     if( marioId >= s_mario_instance_pool.size || s_mario_instance_pool.objects[marioId] == NULL )
     {
         DEBUG_PRINT("Tried to tick non-existant Mario with ID: %u", marioId);
         return;
     }
+	level_set_active_mario(marioId);
 
 	struct GlobalState *state = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
     global_state_bind( state );
@@ -351,6 +355,8 @@ SM64_LIB_FN void sm64_mario_delete( int32_t marioId )
         DEBUG_PRINT("Tried to delete non-existant Mario with ID: %u", marioId);
         return;
     }
+
+	level_unload_player_loaded_rooms(marioId);
 
     struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
     global_state_bind( globalState );
@@ -424,6 +430,7 @@ SM64_LIB_FN void sm64_set_mario_action(int32_t marioId, uint32_t action)
 {
 	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
     global_state_bind( globalState );
+	level_set_active_mario(marioId);
 	
 	set_mario_action( gMarioState, action, 0);
 }
@@ -432,6 +439,7 @@ SM64_LIB_FN void sm64_set_mario_action_arg(int32_t marioId, uint32_t action, uin
 {
 	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
     global_state_bind( globalState );
+	level_set_active_mario(marioId);
 	
 	set_mario_action( gMarioState, action, actionArg);
 }
@@ -440,6 +448,7 @@ SM64_LIB_FN void sm64_set_mario_animation(int32_t marioId, int32_t animID)
 {
 	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
     global_state_bind( globalState );
+	level_set_active_mario(marioId);
 	
 	set_mario_animation(gMarioState, animID);
 }
@@ -490,6 +499,7 @@ SM64_LIB_FN void sm64_mario_take_damage(int32_t marioId, uint32_t damage, uint32
 {
 	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
     global_state_bind( globalState );
+	level_set_active_mario(marioId);
 	
 	fake_damage_knock_back(gMarioState, damage, subtype, x, y, z);
 }
@@ -530,6 +540,7 @@ SM64_LIB_FN void sm64_mario_interact_cap(int32_t marioId, uint32_t capFlag, uint
 {
 	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
     global_state_bind( globalState );
+	level_set_active_mario(marioId);
 	
 	uint16_t capMusic = 0;
 	if(gMarioState->action != ACT_GETTING_BLOWN && capFlag != 0)
@@ -577,13 +588,14 @@ SM64_LIB_FN bool sm64_mario_attack(int32_t marioId, float x, float y, float z, f
 {
 	struct GlobalState *globalState = ((struct MarioInstance *)s_mario_instance_pool.objects[ marioId ])->globalState;
     global_state_bind( globalState );
+	level_set_active_mario(marioId);
 	
 	return fake_interact_bounce_top(gMarioState, x, y, z, hitboxHeight);
 }
 
 SM64_LIB_FN uint32_t sm64_surface_object_create( const struct SM64SurfaceObject *surfaceObject )
 {
-    uint32_t id = level_create_dynamic_object( surfaceObject );
+    uint32_t id = level_load_dynamic_object( surfaceObject );
     return id;
 }
 
@@ -605,7 +617,7 @@ SM64_LIB_FN void sm64_surface_object_delete( uint32_t objectId )
             state->mgMarioObject->platform = NULL;
     }
 
-    level_remove_dynamic_object( objectId );
+    level_unload_dynamic_object( objectId, true );
 }
 
 SM64_LIB_FN void sm64_seq_player_play_sequence(uint8_t player, uint8_t seqId, uint16_t arg2)
@@ -699,63 +711,40 @@ void* audio_thread(void* keepAlive)
 void copy_debug_collision_surface(struct SM64DebugSurface *dst, struct Surface *src)
 {
 	if( src && src->isValid ) {
-		vec3i_copy(dst->v1, src->vertex1);
-		vec3i_copy(dst->v2, src->vertex2);
-		vec3i_copy(dst->v3, src->vertex3);
-		dst->normaly = src->normal.y;
-		dst->surfacePointer = (uintptr_t)src;
-		dst->color = src->room;
+		vec3i2f_copy(dst->v1, src->vertex1);
+		vec3i2f_copy(dst->v2, src->vertex2);
+		vec3i2f_copy(dst->v3, src->vertex3);
+		dst->color = src->eSurfaceType;
+		dst->valid = true;
 	}
 	else
 	{
-		vec3i_reset(dst->v1, 0);
-		vec3i_reset(dst->v2, 0);
-		vec3i_reset(dst->v3, 0);
-		dst->normaly=0.0f;
-		dst->surfacePointer = (uintptr_t)src;
+		vec3f_reset(dst->v1, 0);
+		vec3f_reset(dst->v2, 0);
+		vec3f_reset(dst->v3, 0);
+		dst->color = 0;
+		dst->valid = false;
 	}	
 }
 
-struct SM64DebugSurface *sm64_get_collision_surfaces(struct SM64DebugSurface *floor, struct SM64DebugSurface *ceiling, struct SM64DebugSurface *wall, int *collidersCount)
+struct SM64DebugSurface *sm64_get_collision_surfaces(int marioId, struct SM64DebugSurface *floor, struct SM64DebugSurface *ceiling, struct SM64DebugSurface *wall, int *allSurfacesCount)
 {
-	if(floor->surfacePointer != (uintptr_t) gMarioState->floor )
-	{
-		copy_debug_collision_surface(floor, gMarioState->floor);
+	level_set_active_mario(marioId);
+
+	copy_debug_collision_surface(floor, gMarioState->floor);
+	copy_debug_collision_surface(wall, gMarioState->wall);
+	copy_debug_collision_surface(ceiling, gMarioState->ceil);
+	
+
+	struct Surface **surfaces = level_get_all_loaded_surfaces(allSurfacesCount);
+
+	struct SM64DebugSurface *result = (struct SM64DebugSurface*)malloc(sizeof(struct SM64DebugSurface)*(*allSurfacesCount));
+
+	for(int i=0; i<(*allSurfacesCount); i++) {
+		copy_debug_collision_surface(&(result[i]), surfaces[i]);
 	}
 
-	if(wall->surfacePointer != (uintptr_t) gMarioState->wall )
-	{
-		copy_debug_collision_surface(wall, gMarioState->wall);
-	}
-
-	if(ceiling->surfacePointer != (uintptr_t) gMarioState->ceil ){
-		copy_debug_collision_surface(ceiling, gMarioState->ceil);
-	}
-
-	struct Surface **colliders = get_dynamic_geometry(collidersCount);
-
-	struct SM64DebugSurface *result = (struct SM64DebugSurface*)malloc(sizeof(struct SM64DebugSurface)*(*collidersCount));
-
-	for(int i=0; i<(*collidersCount); i++) {
-		copy_debug_collision_surface(&(result[i]), colliders[i]);
-	}
-
-	free(colliders);
-
-	return result;
-}
-
-struct SM64DebugSurface *sm64_get_all_surfaces(int *surfacesCount)
-{
-	struct Surface **allSurfaces = get_all_geometry(surfacesCount);
-
-	struct SM64DebugSurface *result = (struct SM64DebugSurface*)malloc(sizeof(struct SM64DebugSurface)*(*surfacesCount));
-
-	for(int i=0; i<(*surfacesCount); i++) {
-		copy_debug_collision_surface(&(result[i]), allSurfaces[i]);
-	}
-
-	free(allSurfaces);
+	free(surfaces);
 
 	return result;
 }
@@ -780,12 +769,17 @@ void sm64_level_unload_room(uint32_t roomId)
 	level_unload_room(roomId);
 }
 
-void sm64_level_update_loaded_rooms_list(int *loadedRooms, int loadedCount)
+void sm64_level_update_loaded_rooms_list(int marioId, int *loadedRooms, int loadedCount)
 {
-	level_update_loaded_rooms_list(loadedRooms, loadedCount);
+	level_update_player_loaded_Rooms(marioId, loadedRooms, loadedCount);
 }
 
 void sm64_level_rooms_switch(int switchedRooms[][2], int switchedRoomsCount)
 {
 	level_rooms_switch(switchedRooms, switchedRoomsCount);
+}
+
+void sm64_level_set_active_mario(int marioId)
+{
+	level_set_active_mario(marioId);
 }

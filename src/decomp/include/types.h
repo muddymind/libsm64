@@ -7,6 +7,7 @@
 #include "ultra64.h"
 #include "macros.h"
 #include "PR/ultratypes.h"
+#include "external_types.h"
 
 
 // Certain functions are marked as having return values, but do not
@@ -261,25 +262,8 @@ struct Surface
     u8 isValid; // libsm64: added field
     struct SurfaceObjectTransform *transform; // libsm64: added field
     u16 terrain; // libsm64: added field
+    enum SM64ExternalSurfaceTypes eSurfaceType; //added external room type
 };
-
-struct LoadedSurfaceObject
-{
-    struct SurfaceObjectTransform *transform;
-    uint32_t surfaceCount;
-    struct SM64Surface *libSurfaces;
-    struct Surface *engineSurfaces;    
-};
-
-struct Room
-{
-    struct Surface *staticSurfaces;
-    uint32_t staticSurfacesCount;
-
-    struct Surface *staticObjectSurfaces;
-    uint32_t staticObjectSurfacesCount;
-};
-
 
 struct MarioBodyState
 {

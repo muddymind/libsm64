@@ -7,9 +7,9 @@ struct Surface **get_all_geometry(int *count){
 
     uint32_t numberOfSurfaces=0;
 
-    uint32_t groupCount = level_get_all_surface_group_count();
+    uint32_t groupCount = level_get_room_count();
     for( int i = 0; i < groupCount-1; ++i ) {
-        uint32_t surfCount = level_get_all_surface_group_size( i );
+        uint32_t surfCount = level_get_room_surfaces_count( i );
         numberOfSurfaces+=surfCount;
     }
 
@@ -17,9 +17,9 @@ struct Surface **get_all_geometry(int *count){
 
     uint32_t sindex=0;
     for( int i = 0; i < groupCount-1; ++i ) {
-        uint32_t surfCount = level_get_all_surface_group_size( i );
+        uint32_t surfCount = level_get_room_surfaces_count( i );
         for( int j = 0; j < surfCount; ++j ) {
-            struct Surface * ls = level_get_surface_index( i, j );
+            struct Surface * ls = level_get_room_surface( i, j );
             if(i>=(groupCount-1)/2)
             {
                 ls->room=1;
@@ -35,13 +35,13 @@ struct Surface **get_all_geometry(int *count){
 
 struct Surface **get_dynamic_geometry(int *count){
 
-    uint32_t groupCount = level_get_all_surface_group_count();
-    uint32_t numberOfSurfaces = level_get_all_surface_group_size( groupCount-1 );
+    uint32_t groupCount = level_get_room_count();
+    uint32_t numberOfSurfaces = level_get_room_surfaces_count( groupCount-1 );
 
     struct Surface **dynamicSurfaces = (struct Surface **)malloc(sizeof(struct Surface *)*numberOfSurfaces);
 
     for( int i = 0; i < numberOfSurfaces; i++ ) {
-        struct Surface * ls = level_get_surface_index( groupCount-1, i );
+        struct Surface * ls = level_get_room_surface( groupCount-1, i );
         ls->room=2;
         dynamicSurfaces[i]=ls;
     }
@@ -61,11 +61,11 @@ static struct Surface *find_ceil_from_list( s32 x, s32 y, s32 z, f32 *pheight) {
 
     ceil = NULL;
 
-    uint32_t groupCount = level_get_all_surface_group_count();
+    uint32_t groupCount = level_get_room_count();
     for( int i = 0; i < groupCount; ++i ) {
-    uint32_t surfCount = level_get_all_surface_group_size( i );
+    uint32_t surfCount = level_get_room_surfaces_count( i );
     for( int j = 0; j < surfCount; ++j ) {
-        surf = level_get_surface_index( i, j );
+        surf = level_get_room_surface( i, j );
 
         // libsm64: Weed out surfaces whose triangles are actually line segs. TODO do this at surface load time
         if( !surf->isValid ) continue;
@@ -139,11 +139,11 @@ static struct Surface *find_floor_from_list( s32 x, s32 y, s32 z, f32 *pheight) 
 
     level_update_big_floor_hack(x, y, z);
 
-    uint32_t groupCount = level_get_all_surface_group_count();
+    uint32_t groupCount = level_get_room_count();
     for( int i = 0; i < groupCount; ++i ) {
-    uint32_t surfCount = level_get_all_surface_group_size( i );
+    uint32_t surfCount = level_get_room_surfaces_count( i );
     for( int j = 0; j < surfCount; ++j ) {
-        surf = level_get_surface_index( i, j );
+        surf = level_get_room_surface( i, j );
 
         // libsm64: Weed out surfaces whose triangles are actually line segs. TODO do this at surface load time
         if( !surf->isValid ) continue;
@@ -215,11 +215,11 @@ static s32 find_wall_collisions_from_list( struct WallCollisionData *data) {
         radius = 200.0f;
     }
 
-    uint32_t groupCount = level_get_all_surface_group_count();
+    uint32_t groupCount = level_get_room_count();
     for( int i = 0; i < groupCount; ++i ) {
-    uint32_t surfCount = level_get_all_surface_group_size( i );
+    uint32_t surfCount = level_get_room_surfaces_count( i );
     for( int j = 0; j < surfCount; ++j ) {
-        surf = level_get_surface_index( i, j );
+        surf = level_get_room_surface( i, j );
 
         // libsm64: Weed out surfaces whose triangles are actually line segs. TODO do this at surface load time
         if( !surf->isValid ) continue;
