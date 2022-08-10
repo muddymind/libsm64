@@ -150,7 +150,8 @@ extern SM64_LIB_FN void sm64_play_sound(int32_t soundBits, float *pos);
 extern SM64_LIB_FN void sm64_play_sound_global(int32_t soundBits);
 extern SM64_LIB_FN int sm64_get_version();
 
-extern SM64_LIB_FN struct SM64DebugSurface *sm64_get_collision_surfaces(int marioId, struct SM64DebugSurface *floor, struct SM64DebugSurface *ceiling, struct SM64DebugSurface *wall, int *allSurfacesCount);
+extern SM64_LIB_FN void sm64_get_collision_surfaces(int marioId, struct SM64DebugSurface *floor, struct SM64DebugSurface *ceiling, struct SM64DebugSurface *wall, struct SM64DebugSurface surfaces[]);
+extern SM64_LIB_FN int sm64_get_collision_surfaces_count(int marioId);
 
 void audio_tick();
 void* audio_thread(void* param);

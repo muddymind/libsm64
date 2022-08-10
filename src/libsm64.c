@@ -727,7 +727,7 @@ void copy_debug_collision_surface(struct SM64DebugSurface *dst, struct Surface *
 	}	
 }
 
-struct SM64DebugSurface *sm64_get_collision_surfaces(int marioId, struct SM64DebugSurface *floor, struct SM64DebugSurface *ceiling, struct SM64DebugSurface *wall, int *allSurfacesCount)
+void sm64_get_collision_surfaces(int marioId, struct SM64DebugSurface *floor, struct SM64DebugSurface *ceiling, struct SM64DebugSurface *wall, struct SM64DebugSurface surfaces[])
 {
 	level_set_active_mario(marioId);
 
@@ -736,17 +736,30 @@ struct SM64DebugSurface *sm64_get_collision_surfaces(int marioId, struct SM64Deb
 	copy_debug_collision_surface(ceiling, gMarioState->ceil);
 	
 
-	struct Surface **surfaces = level_get_all_loaded_surfaces(allSurfacesCount);
+	int index=0;
+	int roomsCount = level_get_room_count();
+	for(int i=0; i<roomsCount; i++)
+	{
+		int surfCount = level_get_room_surfaces_count(i);
+		for(int j=0; j<surfCount; j++)
+		{
+			copy_debug_collision_surface(&(surfaces[index++]), level_get_room_surface(i, j));
+		}
+	}
+}
 
-	struct SM64DebugSurface *result = (struct SM64DebugSurface*)malloc(sizeof(struct SM64DebugSurface)*(*allSurfacesCount));
+int sm64_get_collision_surfaces_count(int marioId)
+{
+	level_set_active_mario(marioId);
 
-	for(int i=0; i<(*allSurfacesCount); i++) {
-		copy_debug_collision_surface(&(result[i]), surfaces[i]);
+	int resultCount = 0;
+	int roomsCount = level_get_room_count();
+	for(int i=0; i<roomsCount; i++)
+	{
+		resultCount+=level_get_room_surfaces_count(i);
 	}
 
-	free(surfaces);
-
-	return result;
+	return resultCount;
 }
 
 void sm64_level_init(uint32_t roomsCount)

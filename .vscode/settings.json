@@ -1,6 +1,7 @@
 {
     "makefile.extensionOutputFolder": "./.vscode",
     "files.associations": {
-        "external_types.h": "c"
+        "external_types.h": "c",
+        "functional": "c"
     }
 }
