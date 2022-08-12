@@ -23,8 +23,6 @@ struct SM64Surface
     int16_t type;
     int16_t force;
     uint16_t terrain;
-    int roomIndex; // original room index necessary for face clipper blocks 
-    int faceIndex; // original face index in room necessary for face clipper blocks 
     int32_t vertices[3][3];
 };
 
