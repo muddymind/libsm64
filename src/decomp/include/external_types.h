@@ -8,7 +8,7 @@
  * @brief The max number of clipper blocks in range. We probably won't find more than this activated at once.
  * (famous last words) 
  */
-#define MAX_CLIPPER_BLOCKS 50
+#define MAX_CLIPPER_BLOCKS 200
 /**
  * @brief each clipper block is a cube made of triangles
  */
