@@ -22,8 +22,12 @@ struct Room
 struct MarioLoadedRooms
 {
     int32_t marioId;
+    
     struct Room **rooms;
     uint32_t count;
+    
+    struct Surface clippers[MAX_CLIPPER_BLOCKS_FACES];
+    uint32_t clippersCount;
 };
 
 struct DynamicObjects
@@ -45,6 +49,7 @@ extern void level_rooms_switch(int switchedRooms[][2], int switchedRoomsCount);
 extern void level_load_player_loaded_rooms(int marioId);
 extern void level_unload_player_loaded_rooms(int marioId);
 extern void level_update_player_loaded_Rooms(int marioId, int *newloadedRooms, int loadedCount);
+extern void level_update_player_loaded_Rooms_with_clippers(int marioId, int *newloadedRooms, int loadedCount, const struct SM64Surface clippers[MAX_CLIPPER_BLOCKS_FACES], uint32_t clippersCount);
 
 extern uint32_t level_load_dynamic_object( const struct SM64SurfaceObject *surfaceObject );
 extern void level_unload_dynamic_object( uint32_t objId, bool update_cache );
