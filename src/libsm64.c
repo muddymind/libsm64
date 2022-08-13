@@ -787,6 +787,11 @@ void sm64_level_update_loaded_rooms_list(int marioId, int *loadedRooms, int load
 	level_update_player_loaded_Rooms(marioId, loadedRooms, loadedCount);
 }
 
+void sm64_level_update_player_loaded_Rooms_with_clippers(int marioId, int *newloadedRooms, int loadedCount, const struct SM64Surface clippers[MAX_CLIPPER_BLOCKS_FACES], uint32_t clippersCount)
+{
+	level_update_player_loaded_Rooms_with_clippers(marioId, newloadedRooms, loadedCount, clippers, clippersCount);
+}
+
 void sm64_level_rooms_switch(int switchedRooms[][2], int switchedRoomsCount)
 {
 	level_rooms_switch(switchedRooms, switchedRoomsCount);

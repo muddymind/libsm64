@@ -17,14 +17,6 @@
     #define SM64_LIB_FN
 #endif
 
-struct SM64Surface
-{
-    int16_t type;
-    int16_t force;
-    uint16_t terrain;
-    int32_t vertices[3][3];
-};
-
 struct SM64MarioInputs
 {
     float camLookX, camLookZ;
@@ -161,6 +153,7 @@ extern SM64_LIB_FN void sm64_level_unload();
 extern SM64_LIB_FN void sm64_level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces, const struct SM64SurfaceObject *staticObjects, uint32_t staticObjectsCount);
 extern SM64_LIB_FN void sm64_level_unload_room(uint32_t roomId);
 extern SM64_LIB_FN void sm64_level_update_loaded_rooms_list(int marioId, int *loadedRooms, int loadedCount);
+extern SM64_LIB_FN void sm64_level_update_player_loaded_Rooms_with_clippers(int marioId, int *newloadedRooms, int loadedCount, const struct SM64Surface clippers[MAX_CLIPPER_BLOCKS_FACES], uint32_t clippersCount);
 extern SM64_LIB_FN void sm64_level_rooms_switch(int switchedRooms[][2], int switchedRoomsCount);
 extern SM64_LIB_FN void level_set_active_mario(int marioId);
 

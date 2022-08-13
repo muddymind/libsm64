@@ -3,54 +3,6 @@
 #include "../include/surface_terrains.h"
 #include "../../load_surfaces.h"
 
-struct Surface **get_all_geometry(int *count){
-
-    uint32_t numberOfSurfaces=0;
-
-    uint32_t groupCount = level_get_room_count();
-    for( int i = 0; i < groupCount-1; ++i ) {
-        uint32_t surfCount = level_get_room_surfaces_count( i );
-        numberOfSurfaces+=surfCount;
-    }
-
-    struct Surface **allSurfaces = (struct Surface **)malloc(sizeof(struct Surface *)*numberOfSurfaces);
-
-    uint32_t sindex=0;
-    for( int i = 0; i < groupCount-1; ++i ) {
-        uint32_t surfCount = level_get_room_surfaces_count( i );
-        for( int j = 0; j < surfCount; ++j ) {
-            struct Surface * ls = level_get_room_surface( i, j );
-            if(i>=(groupCount-1)/2)
-            {
-                ls->room=1;
-            }
-            allSurfaces[sindex]=ls;
-            sindex++;
-        }
-    }
-
-    *count=numberOfSurfaces;
-    return allSurfaces;
-}
-
-struct Surface **get_dynamic_geometry(int *count){
-
-    uint32_t groupCount = level_get_room_count();
-    uint32_t numberOfSurfaces = level_get_room_surfaces_count( groupCount-1 );
-
-    struct Surface **dynamicSurfaces = (struct Surface **)malloc(sizeof(struct Surface *)*numberOfSurfaces);
-
-    for( int i = 0; i < numberOfSurfaces; i++ ) {
-        struct Surface * ls = level_get_room_surface( groupCount-1, i );
-        ls->room=2;
-        dynamicSurfaces[i]=ls;
-    }
-    
-
-    *count=numberOfSurfaces;
-    return dynamicSurfaces;
-}
-
 /**
  * Iterate through the list of ceilings and find the first ceiling over a given point.
  */
