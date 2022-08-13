@@ -295,7 +295,7 @@ void level_unload_dynamic_object( uint32_t objId, bool update_cache )
     s_dynamic_objects->objects[objId].engineSurfaces = NULL;
 
     #ifdef DEBUG_LEVEL_ROOMS
-        printf("Removed Collider %d\n", objId);
+        printf("SM64: Removed Collider %d\n", objId);
     #endif
 
     if(update_cache)
@@ -390,10 +390,10 @@ void level_update_dynamic_object_transform( uint32_t objId, const struct SM64Obj
 
 struct SurfaceObjectTransform *level_get_dynamic_object_transform( uint32_t objId )
 {
-    if( s_dynamic_objects->objectsCount || s_dynamic_objects->objects[objId].surfaceCount == 0 )
-        return NULL;
-
-    return s_dynamic_objects->objects[objId].transform;
+    if( objId < s_dynamic_objects->objectsCount && s_dynamic_objects->objects[objId].surfaceCount != 0 )
+        return s_dynamic_objects->objects[objId].transform;
+    
+    return NULL;
 }
 
 #pragma endregion
