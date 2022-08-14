@@ -602,12 +602,6 @@ SM64_LIB_FN void sm64_surface_object_delete( uint32_t objectId )
 
 		set_global_mario_state(i);
 		find_floor(gMarioState->pos[0],gMarioState->pos[1],gMarioState->pos[2],&(gMarioState->floor));
-
-		
-		printf("Mario's %d new floor: (%d, %d, %d) (%d, %d, %d) (%d, %d, %d)\n", i,
-			gMarioState->floor->vertex1[0], gMarioState->floor->vertex1[1], gMarioState->floor->vertex1[2],
-			gMarioState->floor->vertex2[0], gMarioState->floor->vertex2[1], gMarioState->floor->vertex2[2],
-			gMarioState->floor->vertex3[0], gMarioState->floor->vertex3[1], gMarioState->floor->vertex3[2]);
     }
 }
 
