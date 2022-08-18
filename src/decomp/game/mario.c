@@ -1311,6 +1311,7 @@ void update_mario_joystick_inputs(struct MarioState *m) {
 
     if (m->intendedMag > 0.0f) {
         m->intendedYaw = atan2s(-controller->stickY, controller->stickX) + m->area->camera->yaw;
+        m->rawYaw = atan2s(-controller->stickY, controller->stickX);
         m->input |= INPUT_NONZERO_ANALOG;
     } else {
         m->intendedYaw = m->faceAngle[1];
@@ -1326,7 +1327,9 @@ void update_mario_geometry_inputs(struct MarioState *m) {
 
     // We want to allow Mario to be able to climb the same steps lara would. 
     // We will only retain big wall check and increase it's displacement to 65 units to allow Mario to reach the same height.
-    f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 65.0f, 50.0f);
+    // We also don't want to check for wall collision if we are shimmying.
+    if( m->action != ACT_LEDGE_GRAB )
+        f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 65.0f, 50.0f);
     //f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 30.0f, 24.0f);
 
     m->floorHeight = find_floor(m->pos[0], m->pos[1], m->pos[2], &m->floor);
