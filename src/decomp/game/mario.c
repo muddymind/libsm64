@@ -1512,11 +1512,11 @@ void update_mario_health(struct MarioState *m) {
             m->hurtCounter--;
         }
 
-        if (m->health > 0x880) {
-            m->health = 0x880;
+        if (m->health > MARIO_FULL_HEALTH) {
+            m->health = MARIO_FULL_HEALTH;
         }
         if (m->health < 0x100) {
-            m->health = 0xFF;
+            m->health = MARIO_DEAD_HEALTH;
         }
 
         // Play a noise to alert the player when Mario is close to drowning.
@@ -1922,7 +1922,7 @@ void init_mario_from_save_file(void) {
     gMarioState->numKeys = 0;
 
     gMarioState->numLives = 4;
-    gMarioState->health = 0x880;
+    gMarioState->health = MARIO_FULL_HEALTH;
 
     gMarioState->prevNumStarsForDialog = gMarioState->numStars;
     gMarioState->unkB0 = 0xBD;
