@@ -263,6 +263,8 @@ struct Surface
     struct SurfaceObjectTransform *transform; // libsm64: added field
     u16 terrain; // libsm64: added field
     enum SM64ExternalSurfaceTypes eSurfaceType; //added external room type
+    int externalRoom;
+    int externalFace;
 };
 
 struct MarioBodyState

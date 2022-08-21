@@ -786,3 +786,15 @@ void sm64_level_set_active_mario(int marioId)
 {
 	level_set_active_mario(marioId);
 }
+
+float* sm64_get_mario_position(int marioId)
+{
+	if( marioId >= s_mario_instance_pool.size || s_mario_instance_pool.objects[marioId] == NULL )
+    {
+        return NULL;
+    }
+	
+	set_global_mario_state(marioId);
+	
+	return gMarioState->pos;
+}

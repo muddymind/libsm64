@@ -531,13 +531,10 @@ struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 ra
     struct WallCollisionData collisionData;
     struct Surface *wall = NULL;
 
-    collisionData.x = pos[0];
-    collisionData.y = pos[1];
-    collisionData.z = pos[2];
-    collisionData.radius = radius;
-    collisionData.offsetY = offset;
+    int numCollisions = resolve_and_return_multiple_wall_collisions(&collisionData, pos, offset, radius);
 
-    if (find_wall_collisions(&collisionData)) {
+    if(numCollisions)
+    {
         wall = collisionData.walls[collisionData.numWalls - 1];
     }
 
@@ -548,6 +545,28 @@ struct Surface *resolve_and_return_wall_collisions(Vec3f pos, f32 offset, f32 ra
     // This only returns the most recent wall and can also return NULL
     // there are no wall collisions.
     return wall;
+}
+
+/**
+ * Collides with walls and returns the most recent wall.
+ */
+int resolve_and_return_multiple_wall_collisions(struct WallCollisionData *collisionData, Vec3f pos, f32 offset, f32 radius) {
+
+    collisionData->x = pos[0];
+    collisionData->y = pos[1];
+    collisionData->z = pos[2];
+    collisionData->radius = radius;
+    collisionData->offsetY = offset;
+
+    int numCollisions = find_wall_collisions(collisionData);
+
+    pos[0] = collisionData->x;
+    pos[1] = collisionData->y;
+    pos[2] = collisionData->z;
+
+    // This only returns the most recent wall and can also return NULL
+    // there are no wall collisions.
+    return numCollisions;
 }
 
 /**
@@ -1327,9 +1346,10 @@ void update_mario_geometry_inputs(struct MarioState *m) {
 
     // We want to allow Mario to be able to climb the same steps lara would. 
     // We will only retain big wall check and increase it's displacement to 65 units to allow Mario to reach the same height.
-    // We also don't want to check for wall collision if we are shimmying.
-    if( m->action != ACT_LEDGE_GRAB )
+    // We also don't want to check for wall collision if we are shimmying or swimming since those are taken care of at the actions logic.
+    if( m->action != ACT_LEDGE_GRAB && (m->action & ACT_GROUP_MASK) != ACT_GROUP_SUBMERGED) {
         f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 65.0f, 50.0f);
+    }        
     //f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 30.0f, 24.0f);
 
     m->floorHeight = find_floor(m->pos[0], m->pos[1], m->pos[2], &m->floor);
