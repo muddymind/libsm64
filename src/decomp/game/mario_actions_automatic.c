@@ -501,7 +501,7 @@ s32 let_go_of_ledge(struct MarioState *m) {
     struct Surface *floor;
 
     m->vel[1] = 0.0f;
-    m->forwardVel = -8.0f;
+    m->forwardVel = -2.0f; // previously -8.0f
     m->pos[0] -= 60.0f * sins(m->faceAngle[1]);
     m->pos[2] -= 60.0f * coss(m->faceAngle[1]);
 
