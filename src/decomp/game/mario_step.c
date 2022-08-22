@@ -371,7 +371,10 @@ u32 check_ledge_grab(struct MarioState *m, struct Surface *wall, Vec3f intendedP
     ledgePos[2] = nextPos[2] - wall->normal.z * 60.0f;
     ledgePos[1] = find_floor(ledgePos[0], nextPos[1] + 160.0f, ledgePos[2], &ledgeFloor);
 
-    if (ledgePos[1] - nextPos[1] <= 100.0f) {
+    // Originally this was 100.0f but that would make it difficult to grab regular
+    // Tomb Raider platforms that were 1 cell away and around 1 cell height.
+    // This in Tomb Raider is called standing jump grab.
+    if (ledgePos[1] - nextPos[1] <= 80.0f) {
         return FALSE;
     }
 
