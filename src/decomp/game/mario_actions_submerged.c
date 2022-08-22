@@ -104,8 +104,8 @@ static u32 perform_water_full_step(struct MarioState *m, Vec3f nextPos) {
             wall = walls.walls[i];
             // We clip the movement that goes agains a wall normal.
             if(!(wall->normal.x!=0 && wall->normal.z!=0) // we don't care about horizontal surfaces - those are ceilings and floors
-                && (wall!= floor && wall->externalRoom != floor->externalRoom && wall->externalFace != floor->externalFace) // we don't care about the floor
-                && (wall!= ceil && wall->externalRoom != ceil->externalRoom && wall->externalFace != ceil->externalFace)) // we don't care about the ceiling
+                && (floor != NULL && wall!= floor && wall->externalRoom != floor->externalRoom && wall->externalFace != floor->externalFace) // we don't care about the floor
+                && (ceil != NULL && wall!= ceil && wall->externalRoom != ceil->externalRoom && wall->externalFace != ceil->externalFace)) // we don't care about the ceiling
             {
                 if(wall->normal.x != 0)
                 {
