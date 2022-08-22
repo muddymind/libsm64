@@ -1757,6 +1757,12 @@ s32 execute_mario_action(UNUSED struct Object *o) {
             return 0;
         }
 
+        // If the water level lowers while mario is inside water he should quit submerged state
+        if ( (gMarioState->action & ACT_GROUP_MASK) == ACT_GROUP_SUBMERGED && gMarioState->pos[1] > gMarioState->waterLevel )
+        {
+             gMarioState->action= ACT_FREEFALL;
+        }
+
         // The function can loop through many action shifts in one frame,
         // which can lead to unexpected sub-frame behavior. Could potentially hang
         // if a loop of actions were found, but there has not been a situation found.
