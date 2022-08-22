@@ -85,8 +85,11 @@ static u32 perform_water_full_step(struct MarioState *m, Vec3f nextPos) {
     struct Surface *floor;
     f32 ceilHeight;
     f32 floorHeight;
+    int numCollisions;
 
-    wall = resolve_and_return_wall_collisions(nextPos, 10.0f, 110.0f);
+    struct WallCollisionData walls; 
+
+    numCollisions = resolve_and_return_multiple_wall_collisions(&walls, nextPos, 1.0f, 80.0f);
     floorHeight = find_floor(nextPos[0], nextPos[1], nextPos[2], &floor);
     ceilHeight = vec3f_find_ceil(nextPos, floorHeight, &ceil);
 
@@ -94,38 +97,73 @@ static u32 perform_water_full_step(struct MarioState *m, Vec3f nextPos) {
         return WATER_STEP_CANCELLED;
     }
 
-    if (nextPos[1] >= floorHeight) {
-        if (ceilHeight - nextPos[1] >= 160.0f) {
-            vec3f_copy(m->pos, nextPos);
-            m->floor = floor;
-            m->floorHeight = floorHeight;
-
-            if (wall != NULL) {
-                return WATER_STEP_HIT_WALL;
-            } else {
-                return WATER_STEP_NONE;
+    // if (nextPos[1] >= floorHeight && nextPos[1] <= ceilHeight) 
+    // {
+        for(int i; i<numCollisions; i++)
+        {
+            wall = walls.walls[i];
+            // We clip the movement that goes agains a wall normal.
+            if(!(wall->normal.x!=0 && wall->normal.z!=0) // we don't care about horizontal surfaces - those are ceilings and floors
+                && (wall!= floor && wall->externalRoom != floor->externalRoom && wall->externalFace != floor->externalFace) // we don't care about the floor
+                && (wall!= ceil && wall->externalRoom != ceil->externalRoom && wall->externalFace != ceil->externalFace)) // we don't care about the ceiling
+            {
+                if(wall->normal.x != 0)
+                {
+                    nextPos[0] = 0.0f;
+                }
+                if(wall->normal.z != 0)
+                {
+                    nextPos[2] = 0.0f;
+                }
             }
         }
-
-        if (ceilHeight - floorHeight < 160.0f) {
+        
+        // height less the 128 is not realistic
+        if (ceilHeight - floorHeight < 128.0f) 
+        {
             return WATER_STEP_CANCELLED;
         }
 
-        //! Water ceiling downwarp
-        vec3f_set(m->pos, nextPos[0], ceilHeight - 160.0f, nextPos[2]);
-        m->floor = floor;
+        m->ceilHeight = ceilHeight;
+        m->ceil = ceil;
         m->floorHeight = floorHeight;
-        return WATER_STEP_HIT_CEILING;
-    } else {
-        if (ceilHeight - floorHeight < 160.0f) {
-            return WATER_STEP_CANCELLED;
+        m->floor = floor;
+
+        // At very low ceiling passages to avoid Mario being pushed up and down by the
+        // floor or ceiling by forcing him to stay between the floor and ceiling.
+        if ( ceilHeight - floorHeight < 160.0f ) {
+            vec3f_set(m->pos, nextPos[0], (floorHeight+ceilHeight)/2, nextPos[2]);
+            return WATER_STEP_NONE;
         }
 
-        vec3f_set(m->pos, nextPos[0], floorHeight, nextPos[2]);
-        m->floor = floor;
-        m->floorHeight = floorHeight;
-        return WATER_STEP_HIT_FLOOR;
-    }
+        // We don't allow him 64 units close to the floor to avoid geometry clipping.
+        if( nextPos[1] <= floorHeight + 75.0f )
+        {
+            vec3f_set(m->pos, nextPos[0], floorHeight + 75.0f, nextPos[2]);
+            return WATER_STEP_HIT_FLOOR;
+        }
+
+        // We don't allow him 64 units close to the ceiling to avoid geometry clipping.
+        if( nextPos[1] >= ceilHeight - 75.0f )
+        {
+            vec3f_set(m->pos, nextPos[0], ceilHeight - 75.0f, nextPos[2]);
+            return WATER_STEP_HIT_CEILING;
+        }
+
+        //If nothing eventfull happened we just go with out lifes.
+        vec3f_copy(m->pos, nextPos);  
+        return WATER_STEP_NONE;
+       
+    // } else {
+    //     if (ceilHeight - floorHeight < 128.0f) {
+    //         return WATER_STEP_CANCELLED;
+    //     }
+
+    //     vec3f_set(m->pos, nextPos[0], floorHeight, nextPos[2]);
+    //     m->floor = floor;
+    //     m->floorHeight = floorHeight;
+    //     return WATER_STEP_HIT_FLOOR;
+    // }
 }
 
 static void apply_water_current(struct MarioState *m, Vec3f step) {

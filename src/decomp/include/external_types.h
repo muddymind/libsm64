@@ -24,6 +24,8 @@ struct SM64Surface
     int16_t force;
     uint16_t terrain;
     int32_t vertices[3][3];
+    int roomId;
+    int faceId;
 };
 
 struct SM64ObjectTransform

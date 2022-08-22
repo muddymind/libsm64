@@ -157,4 +157,6 @@ extern SM64_LIB_FN void sm64_level_update_player_loaded_Rooms_with_clippers(int 
 extern SM64_LIB_FN void sm64_level_rooms_switch(int switchedRooms[][2], int switchedRoomsCount);
 extern SM64_LIB_FN void level_set_active_mario(int marioId);
 
+extern SM64_LIB_FN float* sm64_get_mario_position(int marioId);
+
 #endif//LIB_SM64_H

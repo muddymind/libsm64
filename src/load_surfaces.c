@@ -214,6 +214,8 @@ static void engine_surface_from_lib_surface( struct Surface *surface, const stru
 
     surface->isValid = 1;
     surface->eSurfaceType = externalType;
+    surface->externalRoom = libSurf->roomId;
+    surface->externalFace = libSurf->faceId;
 }
 
 #pragma endregion
