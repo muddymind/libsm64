@@ -99,7 +99,7 @@ static u32 perform_water_full_step(struct MarioState *m, Vec3f nextPos) {
 
     // if (nextPos[1] >= floorHeight && nextPos[1] <= ceilHeight) 
     // {
-        for(int i; i<numCollisions; i++)
+        for(int i=0; i<numCollisions; i++)
         {
             wall = walls.walls[i];
             // We clip the movement that goes agains a wall normal.
@@ -109,11 +109,11 @@ static u32 perform_water_full_step(struct MarioState *m, Vec3f nextPos) {
             {
                 if(wall->normal.x != 0)
                 {
-                    nextPos[0] = 0.0f;
+                    nextPos[0] = m->pos[0];
                 }
                 if(wall->normal.z != 0)
                 {
-                    nextPos[2] = 0.0f;
+                    nextPos[2] = m->pos[2];
                 }
             }
         }
