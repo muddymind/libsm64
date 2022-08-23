@@ -76,8 +76,10 @@ endif
 debug: CFLAGS += -g -DDEBUG_LEVEL_ROOMS
 debug: LDFLAGS += -g
 debug: $(LIB_FILE) $(LIB_H_FILE)
-release: CFLAGS += -O3
-release: LDFLAGS += -O3
+
+# libsm64 refuses to work with -O3 and -O2
+release: CFLAGS += -O1
+release: LDFLAGS += -O1
 release: $(LIB_FILE) $(LIB_H_FILE)
 
 test: $(TEST_FILE) $(LIB_H_FILE)
