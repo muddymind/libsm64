@@ -1,13 +1,13 @@
-default: lib
+default: debug
 
 CC      := gcc
 CXX 	:= g++
-CFLAGS  := -g -Wall -fPIC -DSM64_LIB_EXPORT -DVERSION_US -DNO_SEGMENTED_MEMORY -DGBI_FLOATS -DDEBUG_LEVEL_ROOMS -Wno-unknown-pragmas
-LDFLAGS := -g -lm -shared -lpthread
-ENDFLAGS := -g -fPIC
+CFLAGS  := -Wall -fPIC -DSM64_LIB_EXPORT -DVERSION_US -DNO_SEGMENTED_MEMORY -DGBI_FLOATS -Wno-unknown-pragmas
+LDFLAGS := -lm -shared -lpthread
+ENDFLAGS := -fPIC
 ifeq ($(OS),Windows_NT)
 LDFLAGS := $(LDFLAGS)
-ENDFLAGS := -g -static -lole32 -lstdc++
+ENDFLAGS := -static -lole32 -lstdc++
 endif
 
 SRC_DIRS  := src src/decomp src/decomp/engine src/decomp/include/PR src/decomp/game src/decomp/pc src/decomp/pc/audio src/decomp/mario src/decomp/tools src/decomp/audio
@@ -73,8 +73,12 @@ else
 	$(CC) -o $@ $(TEST_OBJS) $(LIB_FILE) -lGLEW -lGL -lSDL2 -lSDL2main -lm
 endif
 
-
-lib: $(LIB_FILE) $(LIB_H_FILE)
+debug: CFLAGS += -g -DDEBUG_LEVEL_ROOMS
+debug: LDFLAGS += -g
+debug: $(LIB_FILE) $(LIB_H_FILE)
+release: CFLAGS += -O3
+release: LDFLAGS += -O3
+release: $(LIB_FILE) $(LIB_H_FILE)
 
 test: $(TEST_FILE) $(LIB_H_FILE)
 
