@@ -132,6 +132,7 @@
 #define ACT_GROUP_CUTSCENE   /* 0x00000100 */ (4 << 6)
 #define ACT_GROUP_AUTOMATIC  /* 0x00000140 */ (5 << 6)
 #define ACT_GROUP_OBJECT     /* 0x00000180 */ (6 << 6)
+#define ACT_GROUP_LADDER     /* 0x000001C0 */ (7 << 6)
 
 #define ACT_FLAG_STATIONARY                  /* 0x00000200 */ (1 <<  9)
 #define ACT_FLAG_MOVING                      /* 0x00000400 */ (1 << 10)
@@ -403,6 +404,12 @@
 #define ACT_PICKING_UP_BOWSER          0x00000390 // (0x190 | ACT_FLAG_STATIONARY)
 #define ACT_HOLDING_BOWSER             0x00000391 // (0x191 | ACT_FLAG_STATIONARY)
 #define ACT_RELEASING_BOWSER           0x00000392 // (0x192 | ACT_FLAG_STATIONARY)
+
+// group 0x1C0: ladder actions
+#define ACT_LADDER_START_GRAB          0x000003C0 // (0x1C0 | ACT_FLAG_STATIONARY)
+#define ACT_LADDER_IDLE                0x000003C1 // (0x1C1 | ACT_FLAG_STATIONARY)
+#define ACT_LADDER_MOVING_VERTICAL     0x000005c2 // (0x1C2 | ACT_FLAG_MOVING)
+#define ACT_LADDER_MOVING_HORIZONTAL   0x000005c3 // (0x1C3 | ACT_FLAG_MOVING)
 
 /*
  this input mask is unused by the controller,

@@ -285,7 +285,6 @@ SM64_LIB_FN void sm64_mario_anim_tick( int32_t marioId, uint32_t stateFlags, str
     }
 	
 	set_global_mario_state(marioId);
-	
 	gMarioState->marioObj->header.gfx.angle[0] = rot[0];
 	gMarioState->marioObj->header.gfx.angle[1] = rot[1];
 	gMarioState->marioObj->header.gfx.angle[2] = rot[2];
@@ -465,6 +464,31 @@ SM64_LIB_FN void sm64_set_mario_water_level(int32_t marioId, signed int level)
 	set_global_mario_state(marioId);
 	
 	gMarioState->waterLevel = level;
+}
+
+SM64_LIB_FN void sm64_set_mario_climbing_vector(int32_t marioId, bool direction[2][2])
+{
+	set_global_mario_state(marioId);
+
+	for(int i=0; i<2; i++)
+	{
+		for(int j=0; j<2; j++)
+		{
+			if(gMarioState->climbDirection[i][j] != direction[i][j])
+			{
+				printf("New Climb direction: X(%d, %d) Z(%d, %d)\n", direction[0][0], direction[0][1], direction[1][0], direction[1][1]);
+				break;
+			}
+		}
+	}
+
+	for(int i=0; i<2; i++)
+	{
+		for(int j=0; j<2; j++)
+		{
+			gMarioState->climbDirection[i][j] = direction[i][j];
+		}
+	}
 }
 
 SM64_LIB_FN signed int sm64_get_mario_water_level(int32_t marioId)
