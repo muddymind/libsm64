@@ -49,21 +49,51 @@ bool testValidWall(struct MarioState *m, struct Surface *wall)
     return false;
 }
 
-bool mario_check_viable_ladder_action(struct MarioState *m)
+bool testBlockerWall(struct MarioState *m, struct Surface *wall, Vec3f nexPos)
 {
-    struct Surface* wall = m->wall;
-    if(wall==NULL)
+    if(wall->normal.y!=1.0f)
     {
-        Vec3f nextPos;
+        return false;
+    }
 
-        nextPos[0] = m->pos[0] + sins(m->faceAngle[1])*60.0f;
-        nextPos[2] = m->pos[2] + coss(m->faceAngle[1])*60.0f;
-        nextPos[1] = m->pos[1];
+    if(wall->normal.x == 0.0f && wall->normal.z != 0.0f )
+        if(!((nexPos[2]-m->pos[2]) > 0.0f ^ (wall->normal.z > 0.0f)))
+            return true;
 
-        printf("cos: %.3f, sin: %.3f\n", coss(m->faceAngle[1]), sins(m->faceAngle[1]));
+    if(wall->normal.z == 0.0f && wall->normal.x != 0.0f )
+        if(!((nexPos[0]-m->pos[0]) > 0.0f ^ (wall->normal.x > 0.0f)))
+            return true;
+    
+    return false;
+}
 
-        printf("current: %.0f, after: %.0f\n", m->pos[2], nextPos[2]);
-        wall = resolve_and_return_wall_collisions(nextPos, 65.0f, 80.0f);
+bool mario_check_viable_ladder_action(struct MarioState *m, uint32_t currentState)
+{
+    struct Surface* wall = NULL;
+    
+    switch (currentState)
+    {
+    case ACT_LEDGE_GRAB:
+         Vec3f nextPos;
+
+        nextPos[0] = m->pos[0];
+        nextPos[1] = m->pos[1]-10;
+        nextPos[2] = m->pos[2];        
+        wall = resolve_and_return_wall_collisions(nextPos, 1.0f, 80.0f);
+        break;
+    
+    default:
+        wall = m->wall;
+        if(wall==NULL)
+        {
+            Vec3f nextPos;
+
+            nextPos[0] = m->pos[0] + sins(m->faceAngle[1])*80.0f;
+            nextPos[2] = m->pos[2] + coss(m->faceAngle[1])*80.0f;
+            nextPos[1] = m->pos[1];
+            wall = resolve_and_return_wall_collisions(nextPos, 1.0f, 80.0f);
+        }
+        break;
     }
 
     // if there's no wall or if the wall is not 100% vertical then there's no ladder
@@ -78,20 +108,31 @@ bool mario_check_viable_ladder_action(struct MarioState *m)
 
 
 
+
+
 struct Surface *getViableLadderNextWall(struct MarioState *m, Vec3f nextPos)
 {
     struct Surface* wall = NULL;
+    
     struct WallCollisionData collisionData;
+
 
     resolve_and_return_multiple_wall_collisions(&collisionData, nextPos, 1.0f, 10.0f);
 
     for(int i=0; i<collisionData.numWalls; i++)
     {
+        if(testBlockerWall(m, collisionData.walls[i], nextPos))
+        {
+            return NULL;
+        }
+
         if(testValidWall(m, collisionData.walls[i]))
         {
-            return collisionData.walls[i];
+            wall = collisionData.walls[i];
         }
-    }    
+    }
+
+    return wall;    
 }
 
 bool stub(struct MarioState *m)
@@ -115,7 +156,7 @@ s32 let_go_of_ladder(struct MarioState *m) {
         m->pos[1] = floorHeight;
     }
 
-    return set_mario_action(m, ACT_SOFT_BONK, 0);
+    return set_mario_action(m, ACT_IDLE, 0);
 }
 
 s32 act_ladder_start_grab(struct MarioState *m)
@@ -150,34 +191,38 @@ s32 act_ladder_moving_vertical(struct MarioState *m)
     }
 
     float floorHeight = find_floor_height(m->pos[0], m->pos[1], m->pos[2]);
+    struct Surface *ceil;
+    float ceilHeight = find_ceil(m->pos[0], m->pos[1], m->pos[2], &ceil);
 
     Vec3f nextPos;
     vec3f_copy(&nextPos, &(m->pos));
 
     struct Surface *newWall=NULL;
 
-    for(int i=LADDER_MOVEMENT_VELOCITY; i>0; i--)
-    {
-        if (m->input & INPUT_NONZERO_ANALOG)
-        {
-            //printf("yaw %s%x\n", m->rawYaw<0 ? "-" : "", m->rawYaw<0 ? -(unsigned)m->rawYaw :m->rawYaw);
-            if(m->rawYaw >= -0x3000 && m->rawYaw <= 0x3000)
-            {   
-                // moving up
-                nextPos[1]+=i;
-            }
-            else if(m->rawYaw <= -0x5000 || m->rawYaw >= 0x5000)
-            {
-                // moving down
-                nextPos[1]-=i;
+    bool movingUp=false;
 
-                if( nextPos[1] > floorHeight && nextPos[1]-120<floorHeight)
+
+    if (m->input & INPUT_NONZERO_ANALOG)
+    {
+        if(m->rawYaw >= -0x3000 && m->rawYaw <= 0x3000)
+        {   
+            // moving up
+            nextPos[1]+=LADDER_MOVEMENT_VELOCITY;
+            if(ceil)
+            {
+                if(ceilHeight<nextPos[1]+40)
                 {
-                    set_mario_action(m, ACT_LADDER_IDLE, 0);
-                    return FALSE;
+                    nextPos[1]=ceilHeight-40;
                 }
             }
-            else
+            movingUp=true;
+        }
+        else if(m->rawYaw <= -0x5000 || m->rawYaw >= 0x5000)
+        {
+            // moving down
+            nextPos[1]-=LADDER_MOVEMENT_VELOCITY;
+
+            if( nextPos[1] > floorHeight && nextPos[1]-120<floorHeight)
             {
                 set_mario_action(m, ACT_LADDER_IDLE, 0);
                 return FALSE;
@@ -185,14 +230,42 @@ s32 act_ladder_moving_vertical(struct MarioState *m)
         }
         else
         {
-            return set_mario_action(m, ACT_LADDER_IDLE, 0);
+            set_mario_action(m, ACT_LADDER_IDLE, 0);
+            return FALSE;
         }
-        newWall = getViableLadderNextWall(m, nextPos);
-        if(newWall!=NULL) break;
     }
+    else
+    {
+        return set_mario_action(m, ACT_LADDER_IDLE, 0);
+    }
+    newWall = getViableLadderNextWall(m, nextPos);
 
     if(newWall==NULL)
     {
+        if(movingUp)
+        {
+            nextPos[0] = m->pos[0] + sins(m->faceAngle[1])*30.0f;
+            nextPos[2] = m->pos[2] + coss(m->faceAngle[1])*30.0f;
+            nextPos[1] = m->pos[1] + 20;
+
+            struct Surface *floor;
+            floorHeight = find_floor(nextPos[0], nextPos[1], nextPos[2], &floor);
+            float ceilHeight = find_ceil(nextPos[0], nextPos[1], nextPos[2], &ceil);
+
+            if(floor!=NULL && abs(floorHeight-m->pos[1])<10 && ceilHeight-floorHeight>=160.0f);
+            {
+                m->floor=floor;
+                m->floorHeight=floorHeight;
+                m->ceil=ceil;
+                m->ceilHeight=ceilHeight;
+                //m->input &= INPUT_OFF_FLOOR ^ 0xFFFFF;
+                vec3f_copy(&(m->pos), &nextPos);
+                return set_mario_action(m, ACT_LEDGE_CLIMB_SLOW_1, 0);
+                
+            }
+        }
+        
+
         set_mario_action(m, ACT_LADDER_IDLE, 0);
         return FALSE;
     }
@@ -271,7 +344,8 @@ s32 act_ladder_moving_horizontal(struct MarioState *m)
 
 s32 act_ladder_idle(struct MarioState *m)
 {
-    //printf("########## Grabbing idle! ###########\n");
+    set_mario_anim_with_accel(m, MARIO_ANIM_IDLE_ON_LEDGE, LADDER_IDLE_ANIM_SPEED);
+
     if(m->wall == NULL || m->input & INPUT_B_PRESSED)
     {
         let_go_of_ladder(m);
@@ -289,8 +363,6 @@ s32 act_ladder_idle(struct MarioState *m)
             return set_mario_action(m, ACT_LADDER_MOVING_VERTICAL, 0);
         }
     }
-
-    set_mario_anim_with_accel(m, MARIO_ANIM_IDLE_ON_LEDGE, LADDER_IDLE_ANIM_SPEED);
     return FALSE;
 }
 

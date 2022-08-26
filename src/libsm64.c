@@ -430,6 +430,13 @@ SM64_LIB_FN void sm64_set_mario_action(int32_t marioId, uint32_t action)
 	set_mario_action( gMarioState, action, 0);
 }
 
+SM64_LIB_FN uint32_t sm64_get_mario_action(int32_t marioId)
+{
+	set_global_mario_state(marioId);
+	
+	return gMarioState->action;
+}
+
 SM64_LIB_FN void sm64_set_mario_action_arg(int32_t marioId, uint32_t action, uint32_t actionArg)
 {
 	set_global_mario_state(marioId);

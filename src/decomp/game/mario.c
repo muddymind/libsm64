@@ -1410,7 +1410,7 @@ void update_mario_geometry_inputs(struct MarioState *m) {
             }
         }
 
-        if (m->pos[1] > m->floorHeight + 100.0f) {
+        if (m->pos[1] > m->floorHeight + 100.0f && (m->action & ACT_GROUP_MASK) != ACT_GROUP_LADDER) {
             m->input |= INPUT_OFF_FLOOR;
         }
 

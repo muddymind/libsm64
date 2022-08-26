@@ -115,7 +115,7 @@ s32 check_common_hold_idle_cancels(struct MarioState *m) {
 s32 act_idle(struct MarioState *m) {
     
     if (m->input & INPUT_B_PRESSED) {
-        if(mario_check_viable_ladder_action(m))
+        if(mario_check_viable_ladder_action(m, ACT_IDLE))
         {
             return set_mario_action(m, ACT_LADDER_START_GRAB, 0);
         }
@@ -530,7 +530,7 @@ s32 act_standing_against_wall(struct MarioState *m) {
     }
 
     if (m->input & INPUT_B_PRESSED) {
-        if(mario_check_viable_ladder_action(m))
+        if(mario_check_viable_ladder_action(m, ACT_STANDING_AGAINST_WALL))
         {
             return set_mario_action(m, ACT_LADDER_START_GRAB, 0);
         }
