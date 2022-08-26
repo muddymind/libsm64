@@ -374,7 +374,7 @@ u32 check_ledge_grab(struct MarioState *m, struct Surface *wall, Vec3f intendedP
     // Originally this was 100.0f but that would make it difficult to grab regular
     // Tomb Raider platforms that were 1 cell away and around 1 cell height.
     // This in Tomb Raider is called standing jump grab.
-    if (ledgePos[1] - nextPos[1] <= 80.0f) {
+    if (ledgePos[1] - nextPos[1] <= 75.0f) {
         return FALSE;
     }
 
@@ -472,7 +472,8 @@ s32 perform_air_quarter_step(struct MarioState *m, Vec3f intendedPos, u32 stepAr
 
     //! When the wall is not completely vertical or there is a slight wall
     // misalignment, you can activate these conditions in unexpected situations
-    if ((stepArg & AIR_STEP_CHECK_LEDGE_GRAB) && upperWall == NULL && lowerWall != NULL) {
+    // We only consider the upperWall if it is different from the lowerWall otherwise it blocks Mario from grabbing secret ledges.W
+    if ((stepArg & AIR_STEP_CHECK_LEDGE_GRAB) && ((upperWall == NULL && lowerWall != NULL && upperWall == lowerWall) || (lowerWall != NULL && upperWall != lowerWall))) {
         if (check_ledge_grab(m, lowerWall, intendedPos, nextPos)) {
             return AIR_STEP_GRABBED_LEDGE;
         }

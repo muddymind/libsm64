@@ -562,7 +562,9 @@ s32 act_ledge_grab(struct MarioState *m) {
         m->actionTimer++;
     }
 
-    if (m->floor->normal.y < 0.9063078f) {
+    // Originally this was 0.9063078f but in tomb raider's maps it needs
+    // to grab more slanted ledges
+    if (m->floor->normal.y < 0.855f) {
         return let_go_of_ledge(m);
     }
 
