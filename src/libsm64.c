@@ -254,6 +254,7 @@ SM64_LIB_FN int32_t sm64_mario_create( float x, float y, float z, int16_t rx, in
 
 		set_mario_action( gMarioState, ACT_SPAWN_SPIN_AIRBORNE, 0);
 		find_floor( x, y, z, &gMarioState->floor );
+		gMarioState->tankMode=true;
 	}
 
     return marioIndex;

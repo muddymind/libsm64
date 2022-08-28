@@ -6,6 +6,13 @@
 #include "../include/macros.h"
 #include "../include/types.h"
 
+// (3/16)*PI - MAX turn angle each tick
+#define MAX_TANK_STEARING_ANGLE 0x400
+// (3/8)*PI - MAX forward angle of analog to register forward movement
+#define MAX_TANK_MOVE_INPUT_ANGLE 0x3000
+// (1/16)*PI - analog input to ignore insta turn if Mario at idle.
+#define TANK_STEARING_YAW_IGNORE 0x100
+
 s32 is_anim_at_end(struct MarioState *m);
 s32 is_anim_past_end(struct MarioState *m);
 s16 set_mario_animation(struct MarioState *m, s32 targetAnimID);

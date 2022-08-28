@@ -445,7 +445,22 @@ void update_walking_speed(struct MarioState *m) {
         maxTargetSpeed = 32.0f;
     }
 
-    targetSpeed = m->intendedMag < maxTargetSpeed ? m->intendedMag : maxTargetSpeed;
+    if(m->tankMode)
+    {
+        // We assume max intended forward speed between -0x3000 to 0x3000 (-(3/8)PI to (3/8)PI)
+        if(m->rawYaw>=-MAX_TANK_MOVE_INPUT_ANGLE && m->rawYaw <=MAX_TANK_MOVE_INPUT_ANGLE)
+        {
+            targetSpeed = m->intendedMag < maxTargetSpeed ? m->intendedMag : maxTargetSpeed;
+        }
+        else //Otherwise we just stop
+        {
+            targetSpeed=0;
+        }
+    }
+    else
+    {
+        targetSpeed = m->intendedMag < maxTargetSpeed ? m->intendedMag : maxTargetSpeed;
+    }
 
     if (m->quicksandDepth > 10.0f) {
         targetSpeed *= 6.25 / m->quicksandDepth;
@@ -463,8 +478,30 @@ void update_walking_speed(struct MarioState *m) {
         m->forwardVel = 48.0f;
     }
 
-    m->faceAngle[1] =
-        m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0x800, 0x800);
+    if(m->tankMode)
+    {
+        float stearAngle; 
+        
+        if(m->rawYaw<=-0x2000)
+        {
+            stearAngle=-1;
+        } else if(m->rawYaw>=0x2000)
+        {
+            stearAngle=1;
+        }
+        else
+        {
+            // smoothed transition between -PI/4 (-1) to 0 (0) to PI/4 (1)
+            // This one was hard to get right
+            stearAngle = pow(sins(m->rawYaw*2), 3);
+        }
+
+        m->faceAngle[1] += stearAngle * MAX_TANK_STEARING_ANGLE;
+    }
+    else
+    {
+        m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0x800, 0x800);
+    }
     apply_slope_accel(m);
 }
 
