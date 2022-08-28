@@ -435,6 +435,18 @@ s32 update_decelerating_speed(struct MarioState *m) {
     return stopped;
 }
 
+void update_increase_tank_count(s16 *val)
+{
+    if(*val>TANK_MAX_TURN_COUNT_VALUE) return;
+    (*val)++;
+}
+
+void update_decrease_tank_count(s16 *val)
+{
+    if(*val==0) return;
+    (*val)--;
+}
+
 void update_walking_speed(struct MarioState *m) {
     f32 maxTargetSpeed;
     f32 targetSpeed;
@@ -484,13 +496,21 @@ void update_walking_speed(struct MarioState *m) {
         
         if(m->rawYaw<=-0x2000)
         {
+            update_increase_tank_count(&(m->tankLeftCount));
+            update_decrease_tank_count(&(m->tankRightCount));
+            m->tankLeftCount++;
             stearAngle=-1;
         } else if(m->rawYaw>=0x2000)
         {
+            update_increase_tank_count(&(m->tankRightCount));
+            update_decrease_tank_count(&(m->tankLeftCount));
             stearAngle=1;
         }
         else
         {
+            update_decrease_tank_count(&(m->tankRightCount));
+            update_decrease_tank_count(&(m->tankLeftCount));
+
             // smoothed transition between -PI/4 (-1) to 0 (0) to PI/4 (1)
             // This one was hard to get right
             stearAngle = pow(sins(m->rawYaw*2), 3);
@@ -834,6 +854,17 @@ s32 act_walking(struct MarioState *m) {
     }
 
     if (m->input & INPUT_A_PRESSED) {
+        if(m->tankMode)
+        {
+            if(((m->tankLeftCount>TANK_MIN_TURN_COUNT_FOR_SIDE_FLIP && m->rawYaw>=TANK_SIDE_FLIP_MINIMUM_ANGLE) 
+                || (m->tankRightCount>TANK_MIN_TURN_COUNT_FOR_SIDE_FLIP && m->rawYaw<=-TANK_SIDE_FLIP_MINIMUM_ANGLE))
+                && m->forwardVel >= 16.0f)
+            {
+                m->tankLeftCount=0;
+                m->tankRightCount=0;
+                return set_jumping_action(m, ACT_SIDE_FLIP, 0);
+            }
+        }
         return set_jump_from_landing(m);
     }
 
