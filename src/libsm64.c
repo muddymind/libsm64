@@ -254,7 +254,7 @@ SM64_LIB_FN int32_t sm64_mario_create( float x, float y, float z, int16_t rx, in
 
 		set_mario_action( gMarioState, ACT_SPAWN_SPIN_AIRBORNE, 0);
 		find_floor( x, y, z, &gMarioState->floor );
-		gMarioState->tankMode=true;
+		gMarioState->tankMode=false;
 		gMarioState->tankLeftCount=0;
 		gMarioState->tankRightCount=0;
 	}
@@ -802,4 +802,16 @@ float* sm64_get_mario_position(int marioId)
 	set_global_mario_state(marioId);
 	
 	return gMarioState->pos;
+}
+
+void sm64_set_mario_tank_mode(int marioId, bool tankMode)
+{
+	if( marioId >= s_mario_instance_pool.size || s_mario_instance_pool.objects[marioId] == NULL )
+    {
+        return;
+    }
+	
+	set_global_mario_state(marioId);
+
+	gMarioState->tankMode=tankMode;
 }

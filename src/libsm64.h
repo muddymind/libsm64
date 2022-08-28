@@ -159,4 +159,6 @@ extern SM64_LIB_FN void level_set_active_mario(int marioId);
 
 extern SM64_LIB_FN float* sm64_get_mario_position(int marioId);
 
+extern SM64_LIB_FN void sm64_set_mario_tank_mode(int marioId, bool tankMode);
+
 #endif//LIB_SM64_H
