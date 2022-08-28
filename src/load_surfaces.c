@@ -232,6 +232,46 @@ void level_init_dynamic_objects()
     s_dynamic_objects->cached_count = 0;
 }
 
+void level_update_cached_object_surface_list()
+{
+    if(s_dynamic_objects->cached_surfaces!=NULL)
+    {
+        free(s_dynamic_objects->cached_surfaces);
+        s_dynamic_objects->cached_surfaces=NULL;
+        s_dynamic_objects->cached_count = 0;
+    }
+
+    s_dynamic_objects->cached_count=0;
+
+    for(int i=0; i<s_dynamic_objects->objectsCount; i++)
+    {
+        s_dynamic_objects->cached_count+=s_dynamic_objects->objects[i].surfaceCount;
+    }
+
+    //make space for big floor surfaces
+    if(s_big_floor_hack!=NULL)
+        s_dynamic_objects->cached_count+=s_big_floor_hack->count;
+    
+    s_dynamic_objects->cached_surfaces = (struct Surface**)malloc(sizeof(struct Surface*)*s_dynamic_objects->cached_count);
+
+    int currentIdx=0;
+    for(int i=0; i<s_dynamic_objects->objectsCount; i++)
+    {
+        for(int j=0; j<s_dynamic_objects->objects[i].surfaceCount; j++)
+        {
+            s_dynamic_objects->cached_surfaces[currentIdx++] = &(s_dynamic_objects->objects[i].engineSurfaces[j]);
+        }
+    }
+
+    if(s_big_floor_hack!=NULL)
+    {
+        for(int i=0; i< s_big_floor_hack->count; i++)
+        {
+            s_dynamic_objects->cached_surfaces[currentIdx++]=&(s_big_floor_hack->surfaces[i]);
+        }
+    }
+}
+
 uint32_t level_load_dynamic_object( const struct SM64SurfaceObject *surfaceObject )
 {
     bool pickedOldIndex = false;
@@ -332,46 +372,6 @@ void level_unload_all_dynamic_objects()
 
     free(s_dynamic_objects);
     s_dynamic_objects = NULL;
-}
-
-void level_update_cached_object_surface_list()
-{
-    if(s_dynamic_objects->cached_surfaces!=NULL)
-    {
-        free(s_dynamic_objects->cached_surfaces);
-        s_dynamic_objects->cached_surfaces=NULL;
-        s_dynamic_objects->cached_count = 0;
-    }
-
-    s_dynamic_objects->cached_count=0;
-
-    for(int i=0; i<s_dynamic_objects->objectsCount; i++)
-    {
-        s_dynamic_objects->cached_count+=s_dynamic_objects->objects[i].surfaceCount;
-    }
-
-    //make space for big floor surfaces
-    if(s_big_floor_hack!=NULL)
-        s_dynamic_objects->cached_count+=s_big_floor_hack->count;
-    
-    s_dynamic_objects->cached_surfaces = (struct Surface**)malloc(sizeof(struct Surface*)*s_dynamic_objects->cached_count);
-
-    int currentIdx=0;
-    for(int i=0; i<s_dynamic_objects->objectsCount; i++)
-    {
-        for(int j=0; j<s_dynamic_objects->objects[i].surfaceCount; j++)
-        {
-            s_dynamic_objects->cached_surfaces[currentIdx++] = &(s_dynamic_objects->objects[i].engineSurfaces[j]);
-        }
-    }
-
-    if(s_big_floor_hack!=NULL)
-    {
-        for(int i=0; i< s_big_floor_hack->count; i++)
-        {
-            s_dynamic_objects->cached_surfaces[currentIdx++]=&(s_big_floor_hack->surfaces[i]);
-        }
-    }
 }
 
 void level_update_dynamic_object_transform( uint32_t objId, const struct SM64ObjectTransform *newTransform )

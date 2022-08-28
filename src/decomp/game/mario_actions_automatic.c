@@ -551,7 +551,6 @@ void update_ledge_climb(struct MarioState *m, s32 animation, u32 endAction) {
 
 s32 act_ledge_grab(struct MarioState *m) {
     f32 heightAboveFloor;
-    s16 intendedDYaw = m->intendedYaw - m->faceAngle[1];
     s32 hasSpaceForMario = (m->ceilHeight - m->floorHeight >= 160.0f);
     bool shimmy = false;
     const f32 shimmyVelocity = 4.0f;

@@ -5,6 +5,7 @@
 
 #include "../include/macros.h"
 #include "../include/types.h"
+#include "../engine/surface_collision.h"
 
 
 //Several parameters to control tank control mode

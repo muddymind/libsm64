@@ -45,6 +45,7 @@ extern void level_set_active_mario(int marioId);
 
 extern void level_load_room(uint32_t roomId, const struct SM64Surface *staticSurfaces, uint32_t numSurfaces, const struct SM64SurfaceObject *staticObjects, uint32_t staticObjectsCount);
 extern void level_rooms_switch(int switchedRooms[][2], int switchedRoomsCount);
+extern void level_unload_room(uint32_t roomId);
 
 extern void level_load_player_loaded_rooms(int marioId);
 extern void level_unload_player_loaded_rooms(int marioId);
@@ -81,3 +82,5 @@ extern uint32_t level_get_room_surfaces_count(uint32_t roomIndex);
 extern struct Surface *level_get_room_surface(uint32_t roomIndex, uint32_t surfaceIndex);
 
 extern struct Surface **level_get_all_loaded_surfaces(int *resultCount);
+
+extern void level_update_big_floor_hack(float x, float y, float z);

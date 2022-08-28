@@ -3,6 +3,7 @@
     "files.associations": {
         "external_types.h": "c",
         "functional": "c",
-        "external.h": "c"
+        "external.h": "c",
+        "load_surfaces.h": "c"
     }
 }
