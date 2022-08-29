@@ -96,7 +96,8 @@ void align_with_floor(struct MarioState *m) {
 }
 
 s32 begin_walking_action(struct MarioState *m, f32 forwardVel, u32 action, u32 actionArg) {
-    m->faceAngle[1] = m->intendedYaw;
+    if(!m->tankMode)
+        m->faceAngle[1] = m->intendedYaw;
     mario_set_forward_vel(m, forwardVel);
     return set_mario_action(m, action, actionArg);
 }
@@ -435,6 +436,18 @@ s32 update_decelerating_speed(struct MarioState *m) {
     return stopped;
 }
 
+void update_increase_tank_count(s16 *val)
+{
+    if(*val>TANK_MAX_TURN_COUNT_VALUE) return;
+    (*val)++;
+}
+
+void update_decrease_tank_count(s16 *val)
+{
+    if(*val==0) return;
+    (*val)--;
+}
+
 void update_walking_speed(struct MarioState *m) {
     f32 maxTargetSpeed;
     f32 targetSpeed;
@@ -445,7 +458,22 @@ void update_walking_speed(struct MarioState *m) {
         maxTargetSpeed = 32.0f;
     }
 
-    targetSpeed = m->intendedMag < maxTargetSpeed ? m->intendedMag : maxTargetSpeed;
+    if(m->tankMode)
+    {
+        // We assume max intended forward speed between -0x3000 to 0x3000 (-(3/8)PI to (3/8)PI)
+        if(m->rawYaw>=-MAX_TANK_MOVE_INPUT_ANGLE && m->rawYaw <=MAX_TANK_MOVE_INPUT_ANGLE)
+        {
+            targetSpeed = m->intendedMag < maxTargetSpeed ? m->intendedMag : maxTargetSpeed;
+        }
+        else //Otherwise we just stop
+        {
+            targetSpeed=0;
+        }
+    }
+    else
+    {
+        targetSpeed = m->intendedMag < maxTargetSpeed ? m->intendedMag : maxTargetSpeed;
+    }
 
     if (m->quicksandDepth > 10.0f) {
         targetSpeed *= 6.25 / m->quicksandDepth;
@@ -463,8 +491,38 @@ void update_walking_speed(struct MarioState *m) {
         m->forwardVel = 48.0f;
     }
 
-    m->faceAngle[1] =
-        m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0x800, 0x800);
+    if(m->tankMode)
+    {
+        float stearAngle; 
+        
+        if(m->rawYaw<=-0x2000)
+        {
+            update_increase_tank_count(&(m->tankLeftCount));
+            update_decrease_tank_count(&(m->tankRightCount));
+            m->tankLeftCount++;
+            stearAngle=-1;
+        } else if(m->rawYaw>=0x2000)
+        {
+            update_increase_tank_count(&(m->tankRightCount));
+            update_decrease_tank_count(&(m->tankLeftCount));
+            stearAngle=1;
+        }
+        else
+        {
+            update_decrease_tank_count(&(m->tankRightCount));
+            update_decrease_tank_count(&(m->tankLeftCount));
+
+            // smoothed transition between -PI/4 (-1) to 0 (0) to PI/4 (1)
+            // This one was hard to get right
+            stearAngle = pow(sins(m->rawYaw*2), 3);
+        }
+
+        m->faceAngle[1] += stearAngle * MAX_TANK_STEARING_ANGLE;
+    }
+    else
+    {
+        m->faceAngle[1] = m->intendedYaw - approach_s32((s16)(m->intendedYaw - m->faceAngle[1]), 0, 0x800, 0x800);
+    }
     apply_slope_accel(m);
 }
 
@@ -524,7 +582,14 @@ void anim_and_audio_for_walk(struct MarioState *m) {
     s16 targetPitch = 0;
     f32 val04;
 
-    val04 = m->intendedMag > m->forwardVel ? m->intendedMag : m->forwardVel;
+    if(m->tankMode && (m->rawYaw > MAX_TANK_MOVE_INPUT_ANGLE || m->rawYaw < -MAX_TANK_MOVE_INPUT_ANGLE))
+    {
+        val04 = m->forwardVel;
+    }
+    else
+    {
+        val04 = m->intendedMag > m->forwardVel ? m->intendedMag : m->forwardVel;
+    }
 
     if (val04 < 4.0f) {
         val04 = 4.0f;
@@ -797,6 +862,17 @@ s32 act_walking(struct MarioState *m) {
     }
 
     if (m->input & INPUT_A_PRESSED) {
+        if(m->tankMode)
+        {
+            if(((m->tankLeftCount>TANK_MIN_TURN_COUNT_FOR_SIDE_FLIP && m->rawYaw>=TANK_SIDE_FLIP_MINIMUM_ANGLE) 
+                || (m->tankRightCount>TANK_MIN_TURN_COUNT_FOR_SIDE_FLIP && m->rawYaw<=-TANK_SIDE_FLIP_MINIMUM_ANGLE))
+                && m->forwardVel >= 16.0f)
+            {
+                m->tankLeftCount=0;
+                m->tankRightCount=0;
+                return set_jumping_action(m, ACT_SIDE_FLIP, 0);
+            }
+        }
         return set_jump_from_landing(m);
     }
 
@@ -808,8 +884,15 @@ s32 act_walking(struct MarioState *m) {
         return begin_braking_action(m);
     }
 
-    if (analog_stick_held_back(m) && m->forwardVel >= 16.0f) {
+    if(m->tankMode && (m->rawYaw>=0x8000-TANK_STEARING_YAW_IGNORE || m->rawYaw<=-0x8000+TANK_STEARING_YAW_IGNORE))
+    {
         return set_mario_action(m, ACT_TURNING_AROUND, 0);
+        m->actionTimer = 0;
+    }
+
+    if(!m->tankMode && analog_stick_held_back(m) && m->forwardVel >= 16.0f) {
+        return set_mario_action(m, ACT_TURNING_AROUND, 0);
+        m->actionTimer = 0;
     }
 
     if (m->input & INPUT_Z_PRESSED) {
@@ -968,6 +1051,32 @@ s32 act_hold_heavy_walking(struct MarioState *m) {
 }
 
 s32 act_turning_around(struct MarioState *m) {
+
+    if(m->tankMode)
+    {
+        if(m->rawYaw>=0x8000-TANK_STEARING_YAW_IGNORE || m->rawYaw<=-0x8000+TANK_STEARING_YAW_IGNORE)
+        {
+            if(m->actionTimer==0)
+            {
+                play_sound(SOUND_MOVING_TERRAIN_SLIDE + m->terrainSoundAddend, m->marioObj->header.gfx.cameraToObject);
+                set_mario_animation(m, MARIO_ANIM_TURNING_PART2);
+                m->faceAngle[1] -=0x8000;
+                if(is_anim_at_end(m))
+                {
+                    set_anim_to_frame(m, 0);
+                }
+            }
+            m->actionTimer++;
+            if(is_anim_at_end(m))
+            {
+                begin_walking_action(m, 0.0f, ACT_WALKING, 0);
+            } 
+            return FALSE;
+        }
+        begin_walking_action(m, 0.0f, ACT_WALKING, 0);
+        return FALSE;
+    }
+
     if (m->input & INPUT_ABOVE_SLIDE) {
         return set_mario_action(m, ACT_BEGIN_SLIDING, 0);
     }

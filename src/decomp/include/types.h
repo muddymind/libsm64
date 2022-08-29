@@ -372,6 +372,9 @@ struct MarioState
 	s16 overrideFloorType; // libsm64-gmod: added field
 	u8 fallDamage; // libsm64 tomb raider: added field
 	s16 rawYaw; // libsm64 tomb raider: added field
+    bool tankMode; // libsm64 tomb raider: added field
+    s16 tankLeftCount; // libsm64 tomb raider: added field
+    s16 tankRightCount; // libsm64 tomb raider: added field
 };
 
 #endif // TYPES_H

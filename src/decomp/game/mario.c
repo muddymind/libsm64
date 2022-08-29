@@ -929,8 +929,20 @@ static u32 set_mario_action_moving(struct MarioState *m, u32 action, UNUSED u32 
     switch (action) {
         case ACT_WALKING:
             if (floorClass != SURFACE_CLASS_VERY_SLIPPERY) {
-                if (0.0f <= forwardVel && forwardVel < mag) {
-                    m->forwardVel = mag;
+                {
+                    if(m->tankMode)
+                    {
+                        if((m->rawYaw<=-MAX_TANK_MOVE_INPUT_ANGLE || m->rawYaw>=MAX_TANK_MOVE_INPUT_ANGLE) && 0.0f <= forwardVel && forwardVel < mag)
+                        {
+                            m->forwardVel = mag;
+                        }
+                    }
+                    else
+                    {
+                        if (0.0f <= forwardVel && forwardVel < mag) {
+                            m->forwardVel = mag;
+                        }
+                    }
                 }
             }
 
@@ -1742,6 +1754,12 @@ void func_sh_8025574C(void) {
 }
 #endif
 
+void reset_mario_tank_counts()
+{
+    gMarioState->tankLeftCount=0;
+    gMarioState->tankRightCount=0;
+}
+
 /**
  * Main function for executing Mario's behavior.
  */
@@ -1772,6 +1790,7 @@ s32 execute_mario_action(UNUSED struct Object *o) {
         while (inLoop) {
             switch (gMarioState->action & ACT_GROUP_MASK) {
                 case ACT_GROUP_STATIONARY:
+                    reset_mario_tank_counts();
                     inLoop = mario_execute_stationary_action(gMarioState);
                     break;
 
@@ -1780,22 +1799,27 @@ s32 execute_mario_action(UNUSED struct Object *o) {
                     break;
 
                 case ACT_GROUP_AIRBORNE:
+                    reset_mario_tank_counts();
                     inLoop = mario_execute_airborne_action(gMarioState);
                     break;
 
                 case ACT_GROUP_SUBMERGED:
+                    reset_mario_tank_counts();
                     inLoop = mario_execute_submerged_action(gMarioState);
                     break;
 
                 case ACT_GROUP_CUTSCENE:
+                    reset_mario_tank_counts();
                     inLoop = mario_execute_cutscene_action(gMarioState);
                     break;
 
                 case ACT_GROUP_AUTOMATIC:
+                    reset_mario_tank_counts();
                     inLoop = mario_execute_automatic_action(gMarioState);
                     break;
 
                 case ACT_GROUP_OBJECT:
+                    reset_mario_tank_counts();
                     inLoop = mario_execute_object_action(gMarioState);
                     break;
             }

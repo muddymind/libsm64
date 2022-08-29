@@ -6,7 +6,18 @@
         {
             "label": "compilemake",
             "type": "shell",
-            "command": "make"
+            "command": "make",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
         },
         {
             "label": "compileanddeploy",

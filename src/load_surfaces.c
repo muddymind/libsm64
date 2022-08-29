@@ -220,6 +220,102 @@ static void engine_surface_from_lib_surface( struct Surface *surface, const stru
 
 #pragma endregion
 
+#pragma region Big Floor Hack
+
+void level_load_big_floor_hack(struct Surface *surf)
+{
+    surf->room=-1;
+    surf->isValid = 1;
+    surf->force=0;
+    surf->transform = NULL;
+    surf->type = TERRAIN_STONE;
+    surf->flags = (s8) 0;
+
+    surf->normal.x = 0.0f;
+    surf->normal.y = 1.0f;
+    surf->normal.z = 0.0f;
+}
+
+void level_init_big_floor_hack()
+{
+    s_big_floor_hack = (struct Room*) malloc(sizeof(struct Room));
+    
+    s_big_floor_hack->count=2;
+
+    s_big_floor_hack->surfaces = (struct Surface*) malloc(sizeof(struct Surface)*s_big_floor_hack->count);
+
+    for(int i=0; i<s_big_floor_hack->count; i++)
+    {
+        level_load_big_floor_hack(&(s_big_floor_hack->surfaces[0]));
+        level_load_big_floor_hack(&(s_big_floor_hack->surfaces[1]));
+    }
+
+    level_update_big_floor_hack(0.0f, 0.0f, 0.0f);
+}
+
+void level_unload_big_floor_hack()
+{
+    if( s_big_floor_hack == NULL )
+    {
+        return;
+    }
+
+    if( s_big_floor_hack->surfaces!=NULL ) 
+    {
+        free(s_big_floor_hack->surfaces);
+        s_big_floor_hack->surfaces=NULL;
+    }
+
+    s_big_floor_hack->count=0;
+
+    free(s_big_floor_hack);
+    s_big_floor_hack = NULL;
+}
+
+void level_update_big_floor_hack(float x, float y, float z)
+{
+    if(s_big_floor_hack==NULL || s_big_floor_hack->surfaces==NULL)
+    {
+        return;
+    }
+    int height = y-BIG_HACK_FLOOR_HEIGHT;
+
+    struct Surface *big_floor_hack1 = &(s_big_floor_hack->surfaces[0]);
+    struct Surface *big_floor_hack2 = &(s_big_floor_hack->surfaces[1]);
+
+    big_floor_hack1->vertex1[0] = x-BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack1->vertex2[0] = x-BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack1->vertex3[0] = x+BIG_HACK_FLOOR_DIMENSIONS;
+
+    big_floor_hack2->vertex1[0] = x-BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack2->vertex2[0] = x+BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack2->vertex3[0] = x+BIG_HACK_FLOOR_DIMENSIONS;
+
+    big_floor_hack1->vertex1[1] = height;
+    big_floor_hack1->vertex2[1] = height;
+    big_floor_hack1->vertex3[1] = height;
+
+    big_floor_hack2->vertex1[1] = height;
+    big_floor_hack2->vertex2[1] = height;
+    big_floor_hack2->vertex3[1] = height;
+
+    big_floor_hack1->vertex1[2] = z-BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack1->vertex2[2] = z+BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack1->vertex3[2] = z+BIG_HACK_FLOOR_DIMENSIONS;
+
+    big_floor_hack2->vertex1[2] = z-BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack2->vertex2[2] = z+BIG_HACK_FLOOR_DIMENSIONS;
+    big_floor_hack2->vertex3[2] = z-BIG_HACK_FLOOR_DIMENSIONS;
+
+    big_floor_hack1->originOffset = -height;
+    big_floor_hack2->originOffset = -height;
+
+    big_floor_hack1->lowerY = height;
+    big_floor_hack2->upperY = height;
+}
+
+#pragma endregion
+
 #pragma region Dynamic objects management
 
 void level_init_dynamic_objects()
@@ -230,6 +326,46 @@ void level_init_dynamic_objects()
     s_dynamic_objects->objectsCount = 0;
     s_dynamic_objects->cached_surfaces = NULL;
     s_dynamic_objects->cached_count = 0;
+}
+
+void level_update_cached_object_surface_list()
+{
+    if(s_dynamic_objects->cached_surfaces!=NULL)
+    {
+        free(s_dynamic_objects->cached_surfaces);
+        s_dynamic_objects->cached_surfaces=NULL;
+        s_dynamic_objects->cached_count = 0;
+    }
+
+    s_dynamic_objects->cached_count=0;
+
+    for(int i=0; i<s_dynamic_objects->objectsCount; i++)
+    {
+        s_dynamic_objects->cached_count+=s_dynamic_objects->objects[i].surfaceCount;
+    }
+
+    //make space for big floor surfaces
+    if(s_big_floor_hack!=NULL)
+        s_dynamic_objects->cached_count+=s_big_floor_hack->count;
+    
+    s_dynamic_objects->cached_surfaces = (struct Surface**)malloc(sizeof(struct Surface*)*s_dynamic_objects->cached_count);
+
+    int currentIdx=0;
+    for(int i=0; i<s_dynamic_objects->objectsCount; i++)
+    {
+        for(int j=0; j<s_dynamic_objects->objects[i].surfaceCount; j++)
+        {
+            s_dynamic_objects->cached_surfaces[currentIdx++] = &(s_dynamic_objects->objects[i].engineSurfaces[j]);
+        }
+    }
+
+    if(s_big_floor_hack!=NULL)
+    {
+        for(int i=0; i< s_big_floor_hack->count; i++)
+        {
+            s_dynamic_objects->cached_surfaces[currentIdx++]=&(s_big_floor_hack->surfaces[i]);
+        }
+    }
 }
 
 uint32_t level_load_dynamic_object( const struct SM64SurfaceObject *surfaceObject )
@@ -332,46 +468,6 @@ void level_unload_all_dynamic_objects()
 
     free(s_dynamic_objects);
     s_dynamic_objects = NULL;
-}
-
-void level_update_cached_object_surface_list()
-{
-    if(s_dynamic_objects->cached_surfaces!=NULL)
-    {
-        free(s_dynamic_objects->cached_surfaces);
-        s_dynamic_objects->cached_surfaces=NULL;
-        s_dynamic_objects->cached_count = 0;
-    }
-
-    s_dynamic_objects->cached_count=0;
-
-    for(int i=0; i<s_dynamic_objects->objectsCount; i++)
-    {
-        s_dynamic_objects->cached_count+=s_dynamic_objects->objects[i].surfaceCount;
-    }
-
-    //make space for big floor surfaces
-    if(s_big_floor_hack!=NULL)
-        s_dynamic_objects->cached_count+=s_big_floor_hack->count;
-    
-    s_dynamic_objects->cached_surfaces = (struct Surface**)malloc(sizeof(struct Surface*)*s_dynamic_objects->cached_count);
-
-    int currentIdx=0;
-    for(int i=0; i<s_dynamic_objects->objectsCount; i++)
-    {
-        for(int j=0; j<s_dynamic_objects->objects[i].surfaceCount; j++)
-        {
-            s_dynamic_objects->cached_surfaces[currentIdx++] = &(s_dynamic_objects->objects[i].engineSurfaces[j]);
-        }
-    }
-
-    if(s_big_floor_hack!=NULL)
-    {
-        for(int i=0; i< s_big_floor_hack->count; i++)
-        {
-            s_dynamic_objects->cached_surfaces[currentIdx++]=&(s_big_floor_hack->surfaces[i]);
-        }
-    }
 }
 
 void level_update_dynamic_object_transform( uint32_t objId, const struct SM64ObjectTransform *newTransform )
@@ -571,46 +667,6 @@ void level_rooms_switch(int switchedRooms[][2], int switchedRoomsCount)
 
 #pragma endregion
 
-#pragma region Level management
-
-bool level_init(uint32_t roomsCount)
-{
-    #ifdef DEBUG_LEVEL_ROOMS
-        printf("SM64: init level\n");
-    #endif
-    if(s_level_loaded)
-    {
-        printf("SM64: Aborted trying to load a level already loaded.");
-        return false;
-    }
-
-    level_init_rooms(roomsCount);
-    level_init_player_loaded_rooms();
-    level_init_dynamic_objects();
-    level_init_big_floor_hack();
-    level_update_cached_object_surface_list();
-
-    s_level_loaded = true;
-
-    return true;
-}
-
-void level_unload()
-{
-    #ifdef DEBUG_LEVEL_ROOMS
-        printf("SM64: unload level\n");
-    #endif
-
-    s_level_loaded=false;
-
-    level_unload_all_rooms();
-    level_unload_all_player_loaded_rooms();
-    level_unload_all_dynamic_objects();
-    level_unload_big_floor_hack();
-}
-
-#pragma endregion
-
 #pragma region Player Loaded Rooms
 
 void level_init_player_loaded_rooms()
@@ -722,98 +778,43 @@ void level_set_active_mario(int marioId)
 
 #pragma endregion
 
-#pragma region Big Floor Hack
 
-void level_init_big_floor_hack()
+#pragma region Level management
+
+bool level_init(uint32_t roomsCount)
 {
-    s_big_floor_hack = (struct Room*) malloc(sizeof(struct Room));
-    
-    s_big_floor_hack->count=2;
-
-    s_big_floor_hack->surfaces = (struct Surface*) malloc(sizeof(struct Surface)*s_big_floor_hack->count);
-
-    for(int i=0; i<s_big_floor_hack->count; i++)
+    #ifdef DEBUG_LEVEL_ROOMS
+        printf("SM64: init level\n");
+    #endif
+    if(s_level_loaded)
     {
-        level_load_big_floor_hack(&(s_big_floor_hack->surfaces[0]));
-        level_load_big_floor_hack(&(s_big_floor_hack->surfaces[1]));
+        printf("SM64: Aborted trying to load a level already loaded.");
+        return false;
     }
 
-    level_update_big_floor_hack(0.0f, 0.0f, 0.0f);
+    level_init_rooms(roomsCount);
+    level_init_player_loaded_rooms();
+    level_init_dynamic_objects();
+    level_init_big_floor_hack();
+    level_update_cached_object_surface_list();
+
+    s_level_loaded = true;
+
+    return true;
 }
 
-void level_unload_big_floor_hack()
+void level_unload()
 {
-    if( s_big_floor_hack == NULL )
-    {
-        return;
-    }
+    #ifdef DEBUG_LEVEL_ROOMS
+        printf("SM64: unload level\n");
+    #endif
 
-    if( s_big_floor_hack->surfaces!=NULL ) 
-    {
-        free(s_big_floor_hack->surfaces);
-        s_big_floor_hack->surfaces=NULL;
-    }
+    s_level_loaded=false;
 
-    s_big_floor_hack->count=0;
-
-    free(s_big_floor_hack);
-    s_big_floor_hack = NULL;
-}
-
-void level_load_big_floor_hack(struct Surface *surf)
-{
-    surf->room=-1;
-    surf->isValid = 1;
-    surf->force=0;
-    surf->transform = NULL;
-    surf->type = TERRAIN_STONE;
-    surf->flags = (s8) 0;
-
-    surf->normal.x = 0.0f;
-    surf->normal.y = 1.0f;
-    surf->normal.z = 0.0f;
-}
-
-void level_update_big_floor_hack(float x, float y, float z)
-{
-    if(s_big_floor_hack==NULL || s_big_floor_hack->surfaces==NULL)
-    {
-        return;
-    }
-    int height = y-BIG_HACK_FLOOR_HEIGHT;
-
-    struct Surface *big_floor_hack1 = &(s_big_floor_hack->surfaces[0]);
-    struct Surface *big_floor_hack2 = &(s_big_floor_hack->surfaces[1]);
-
-    big_floor_hack1->vertex1[0] = x-BIG_HACK_FLOOR_DIMENSIONS;
-    big_floor_hack1->vertex2[0] = x-BIG_HACK_FLOOR_DIMENSIONS;
-    big_floor_hack1->vertex3[0] = x+BIG_HACK_FLOOR_DIMENSIONS;
-
-    big_floor_hack2->vertex1[0] = x-BIG_HACK_FLOOR_DIMENSIONS;
-    big_floor_hack2->vertex2[0] = x+BIG_HACK_FLOOR_DIMENSIONS;
-    big_floor_hack2->vertex3[0] = x+BIG_HACK_FLOOR_DIMENSIONS;
-
-    big_floor_hack1->vertex1[1] = height;
-    big_floor_hack1->vertex2[1] = height;
-    big_floor_hack1->vertex3[1] = height;
-
-    big_floor_hack2->vertex1[1] = height;
-    big_floor_hack2->vertex2[1] = height;
-    big_floor_hack2->vertex3[1] = height;
-
-    big_floor_hack1->vertex1[2] = z-BIG_HACK_FLOOR_DIMENSIONS;
-    big_floor_hack1->vertex2[2] = z+BIG_HACK_FLOOR_DIMENSIONS;
-    big_floor_hack1->vertex3[2] = z+BIG_HACK_FLOOR_DIMENSIONS;
-
-    big_floor_hack2->vertex1[2] = z-BIG_HACK_FLOOR_DIMENSIONS;
-    big_floor_hack2->vertex2[2] = z+BIG_HACK_FLOOR_DIMENSIONS;
-    big_floor_hack2->vertex3[2] = z-BIG_HACK_FLOOR_DIMENSIONS;
-
-    big_floor_hack1->originOffset = -height;
-    big_floor_hack2->originOffset = -height;
-
-    big_floor_hack1->lowerY = height;
-    big_floor_hack2->upperY = height;
+    level_unload_all_rooms();
+    level_unload_all_player_loaded_rooms();
+    level_unload_all_dynamic_objects();
+    level_unload_big_floor_hack();
 }
 
 #pragma endregion

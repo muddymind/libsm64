@@ -5,6 +5,28 @@
 
 #include "../include/macros.h"
 #include "../include/types.h"
+#include "../engine/surface_collision.h"
+
+
+//Several parameters to control tank control mode
+
+// (3/16)*PI - MAX turn angle for each walking tick
+#define MAX_TANK_STEARING_ANGLE 0x400
+
+// (3/8)*PI - MAX forward angle of analog to register forward movement (to avoid walking when pressing left/right or 90º angle on analog)
+#define MAX_TANK_MOVE_INPUT_ANGLE 0x3000
+
+// (1/16)*PI - analog input to ignore insta turn if Mario at idle (to avoid turning mario accidentally at movement start).
+#define TANK_STEARING_YAW_IGNORE 0x100
+
+// Max counter value for each side to evaluete side flip. Too high it will be easy to accumulate count to side flip and too low it will be too hard.
+#define TANK_MAX_TURN_COUNT_VALUE 12
+
+// (1/4)*PI - minimum analog angle at which we might consider side flip
+#define TANK_SIDE_FLIP_MINIMUM_ANGLE 0x2000
+
+// The minimum count for the oposite direction to allow to do a side flip. Too low it becomes too easy and to high it becomes too hard.
+#define TANK_MIN_TURN_COUNT_FOR_SIDE_FLIP 7
 
 s32 is_anim_at_end(struct MarioState *m);
 s32 is_anim_past_end(struct MarioState *m);
