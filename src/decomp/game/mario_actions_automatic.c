@@ -551,7 +551,6 @@ void update_ledge_climb(struct MarioState *m, s32 animation, u32 endAction) {
 
 s32 act_ledge_grab(struct MarioState *m) {
     f32 heightAboveFloor;
-    s32 hasSpaceForMario = (m->ceilHeight - m->floorHeight >= 160.0f);
     bool shimmy = false;
     const f32 shimmyVelocity = 4.0f;
     const s32 StationaryAnimVelocity = 0x10000;
@@ -560,6 +559,10 @@ s32 act_ledge_grab(struct MarioState *m) {
     if (m->actionTimer < 10) {
         m->actionTimer++;
     }
+
+    // We need to recheck the ceiling in case it was not updated correctly
+    float ceilHeight = find_ceil(m->pos[0], m->pos[1], m->pos[2], &(m->ceil));
+    s32 hasSpaceForMario = (ceilHeight - m->floorHeight >= 160.0f);
 
     // Originally this was 0.9063078f but in tomb raider's maps it needs
     // to grab more slanted ledges
