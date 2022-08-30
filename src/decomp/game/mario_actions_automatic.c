@@ -562,7 +562,7 @@ s32 act_ledge_grab(struct MarioState *m) {
 
     s32 hasSpaceForMario;
     // We need to recheck the ceiling in case it was not updated correctly
-    if(m->ceilHeight==100000)
+    if(m->ceilHeight==100000 && m->ceil==NULL)
     {
         struct Surface *ceil;
         float ceilHeight = find_ceil(m->pos[0], m->pos[1]+10, m->pos[2], &ceil);
