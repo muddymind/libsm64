@@ -560,9 +560,18 @@ s32 act_ledge_grab(struct MarioState *m) {
         m->actionTimer++;
     }
 
+    s32 hasSpaceForMario;
     // We need to recheck the ceiling in case it was not updated correctly
-    float ceilHeight = find_ceil(m->pos[0], m->pos[1], m->pos[2], &(m->ceil));
-    s32 hasSpaceForMario = (ceilHeight - m->floorHeight >= 160.0f);
+    if(m->ceilHeight==100000)
+    {
+        struct Surface *ceil;
+        float ceilHeight = find_ceil(m->pos[0], m->pos[1]+10, m->pos[2], &ceil);
+        hasSpaceForMario = (ceilHeight - m->floorHeight >= 160.0f);
+    }
+    else
+    {
+        hasSpaceForMario = (m->ceilHeight - m->floorHeight >= 160.0f);
+    }
 
     // Originally this was 0.9063078f but in tomb raider's maps it needs
     // to grab more slanted ledges
