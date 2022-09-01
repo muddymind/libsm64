@@ -566,7 +566,7 @@ s32 act_ledge_grab(struct MarioState *m) {
     {
         struct Surface *ceil;
         float ceilHeight = find_ceil(m->pos[0], m->pos[1]+10, m->pos[2], &ceil);
-        hasSpaceForMario = (ceilHeight - m->floorHeight >= 160.0f);
+        hasSpaceForMario = (ceilHeight<m->floorHeight) || (ceilHeight - m->floorHeight >= 160.0f);
     }
     else
     {
