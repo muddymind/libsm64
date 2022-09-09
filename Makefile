@@ -8,6 +8,8 @@ ENDFLAGS := -fPIC
 ifeq ($(OS),Windows_NT)
 LDFLAGS := $(LDFLAGS)
 ENDFLAGS := -static -lole32 -lstdc++
+else
+CFLAGS := $(CFLAGS) -DUSE_ALSA -DUSE_PULSEAUDIO
 endif
 
 SRC_DIRS  := src src/decomp src/decomp/engine src/decomp/include/PR src/decomp/game src/decomp/pc src/decomp/pc/audio src/decomp/mario src/decomp/tools src/decomp/audio
