@@ -54,6 +54,7 @@ void *vec3f_cross(Vec3f dest, Vec3f a, Vec3f b);
 void *vec3f_normalize(Vec3f dest);
 void mtxf_copy(Mat4 dest, Mat4 src);
 void mtxf_identity(Mat4 mtx);
+void mtxf_identity_with_scaling(Mat4 mtx, f32 scalingFactor);
 void mtxf_translate(Mat4 dest, Vec3f b);
 void mtxf_lookat(Mat4 mtx, Vec3f from, Vec3f to, s16 roll);
 void mtxf_rotate_zxy_and_translate(Mat4 dest, Vec3f translate, Vec3s rotate);

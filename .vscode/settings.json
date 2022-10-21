@@ -4,6 +4,8 @@
         "external_types.h": "c",
         "functional": "c",
         "external.h": "c",
-        "load_surfaces.h": "c"
+        "load_surfaces.h": "c",
+        "cstdio": "c",
+        "system_error": "c"
     }
 }

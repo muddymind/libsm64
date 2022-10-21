@@ -101,7 +101,7 @@ enum
 extern SM64_LIB_FN void sm64_global_init( uint8_t *rom, uint8_t *outTexture, SM64DebugPrintFunctionPtr debugPrintFunction );
 extern SM64_LIB_FN void sm64_global_terminate( void );
 
-extern SM64_LIB_FN int32_t sm64_mario_create( float x, float y, float z, int16_t rx, int16_t ry, int16_t rz, uint8_t fake, int *loadedRooms, int loadedCount);
+extern SM64_LIB_FN int32_t sm64_mario_create( float x, float y, float z, int16_t rx, int16_t ry, int16_t rz, uint8_t fake, int *loadedRooms, int loadedCount, float animationSale);
 extern SM64_LIB_FN void sm64_mario_tick(int32_t marioId, const struct SM64MarioInputs *inputs, struct SM64MarioState *outState, struct SM64MarioGeometryBuffers *outBuffers );
 extern SM64_LIB_FN struct SM64AnimInfo* sm64_mario_get_anim_info( int32_t marioId, int16_t rot[3] );
 extern SM64_LIB_FN void sm64_mario_anim_tick( int32_t marioId, uint32_t stateFlags, struct SM64AnimInfo* animInfo, struct SM64MarioGeometryBuffers *outBuffers, int16_t rot[3] );
@@ -160,5 +160,6 @@ extern SM64_LIB_FN void level_set_active_mario(int marioId);
 extern SM64_LIB_FN float* sm64_get_mario_position(int marioId);
 
 extern SM64_LIB_FN void sm64_set_mario_tank_mode(int marioId, bool tankMode);
+extern SM64_LIB_FN float** sm64_get_mario_part_animation_matrix(int marioId, int partId);
 
 #endif//LIB_SM64_H

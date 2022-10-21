@@ -9,6 +9,8 @@
 #include "PR/ultratypes.h"
 #include "external_types.h"
 
+#define MAX_ANIMATION_PARTS 30
+
 
 // Certain functions are marked as having return values, but do not
 // actually return a value. This causes undefined behavior, which we'd rather
@@ -375,6 +377,10 @@ struct MarioState
     bool tankMode; // libsm64 tomb raider: added field
     s16 tankLeftCount; // libsm64 tomb raider: added field
     s16 tankRightCount; // libsm64 tomb raider: added field
+    float ***partsAnimationMatrix;
+    float animationScaling;
+
+    int partsAnimationCount;
 };
 
 #endif // TYPES_H

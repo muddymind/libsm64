@@ -616,6 +616,16 @@ static void geo_process_animated_part(struct GraphNodeAnimatedPart *node) {
     mtxf_mul(gMatStack[gMatStackIndex + 1], matrix, gMatStack[gMatStackIndex]);
     gMatStackIndex++;
     mtxf_to_mtx(matrixPtr, gMatStack[gMatStackIndex]);
+    for(int i=0; i<4; i++)
+    {
+        for(int j=0; j<4; j++)
+        {
+            gMarioState->partsAnimationMatrix[gMarioState->partsAnimationCount][i][j]=gMatStack[gMatStackIndex][i][j];
+        }
+    }
+
+    gMarioState->partsAnimationCount++;
+
     gMatStackFixed[gMatStackIndex] = matrixPtr;
     if (node->displayList != NULL) {
         geo_append_display_list(node->displayList, node->node.flags >> 8);
@@ -1119,6 +1129,9 @@ void geo_process_node_and_siblings(struct GraphNode *firstNode) {
 
 void geo_process_root_hack_single_node(struct GraphNode *node)
 {
+
+    gMarioState->partsAnimationCount=0;
+
     gDisplayListHead = NULL; // Currently unused, but referenced
 
     display_list_pool_reset();
@@ -1139,6 +1152,8 @@ void geo_process_root_hack_single_node(struct GraphNode *node)
     // Hacked in from geo_proces_object since we only have Mario
     //geo_process_object( node );
     if (gMarioObject->header.gfx.throwMatrix != NULL) {
+        Vec3f customScaling = {gMarioState->animationScaling, gMarioState->animationScaling, gMarioState->animationScaling};
+        mtxf_scale_vec3f( gMatStack[gMatStackIndex], gMatStack[gMatStackIndex], customScaling);
         mtxf_mul(gMatStack[gMatStackIndex + 1], *gMarioObject->header.gfx.throwMatrix, gMatStack[gMatStackIndex]);
         mtxf_scale_vec3f( gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex + 1], gMarioObject->header.gfx.scale );
         gMarioObject->header.gfx.throwMatrix = &gMatStack[++gMatStackIndex];
@@ -1146,8 +1161,10 @@ void geo_process_root_hack_single_node(struct GraphNode *node)
     else {
         Mat4 identity, scale, rotTran;
         mtxf_identity( identity );
-        mtxf_scale_vec3f( scale, identity, gMarioObject->header.gfx.scale );
-        mtxf_rotate_zxy_and_translate( rotTran, gMarioObject->header.gfx.pos, gMarioObject->header.gfx.angle );
+        Vec3f customScaling = {gMarioObject->header.gfx.scale[0]*gMarioState->animationScaling, gMarioObject->header.gfx.scale[1]*gMarioState->animationScaling, gMarioObject->header.gfx.scale[2]*gMarioState->animationScaling};
+        mtxf_scale_vec3f( scale, identity, customScaling);
+        Vec3f customTranslation = {gMarioObject->header.gfx.pos[0]*gMarioState->animationScaling, gMarioObject->header.gfx.pos[1]*gMarioState->animationScaling, gMarioObject->header.gfx.pos[2]*gMarioState->animationScaling};
+        mtxf_rotate_zxy_and_translate( rotTran, customTranslation, gMarioObject->header.gfx.angle );
         mtxf_mul( gMatStack[++gMatStackIndex], scale, rotTran );
     }
     geo_set_animation_globals(&gMarioObject->header.gfx.animInfo, 1);

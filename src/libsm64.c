@@ -204,7 +204,7 @@ SM64_LIB_FN void sm64_global_terminate( void )
 //     surfaces_load_static( surfaceArray, numSurfaces );
 // }
 
-SM64_LIB_FN int32_t sm64_mario_create( float x, float y, float z, int16_t rx, int16_t ry, int16_t rz, uint8_t fake, int *loadedRooms, int loadedCount)
+SM64_LIB_FN int32_t sm64_mario_create( float x, float y, float z, int16_t rx, int16_t ry, int16_t rz, uint8_t fake, int *loadedRooms, int loadedCount, float animationSale)
 {
     int32_t marioIndex = obj_pool_alloc_index( &s_mario_instance_pool, sizeof( struct MarioInstance ));
 	level_load_player_loaded_rooms(marioIndex);
@@ -258,6 +258,20 @@ SM64_LIB_FN int32_t sm64_mario_create( float x, float y, float z, int16_t rx, in
 		gMarioState->tankLeftCount=0;
 		gMarioState->tankRightCount=0;
 	}
+
+	gMarioState->partsAnimationCount=0;
+
+	gMarioState->partsAnimationMatrix = (float***) malloc(sizeof(float**)*MAX_ANIMATION_PARTS);
+	for(int i=0; i<MAX_ANIMATION_PARTS; i++)
+	{
+		gMarioState->partsAnimationMatrix[i]=(float**) malloc(sizeof(float*)*4);
+		for(int j=0; j<4; j++)
+		{
+			gMarioState->partsAnimationMatrix[i][j]=(float*) malloc(sizeof(float)*4);
+		}
+	}
+
+	gMarioState->animationScaling=animationSale;
 
     return marioIndex;
 }
@@ -367,6 +381,16 @@ SM64_LIB_FN void sm64_mario_delete( int32_t marioId )
     struct GlobalState *globalState = set_global_mario_state(marioId);
 
 	stop_sound(SOUND_MARIO_SNORING3, gMarioState->marioObj->header.gfx.cameraToObject);
+
+	for(int i=0; i<MAX_ANIMATION_PARTS; i++)
+	{
+		for(int j=0; j<4; j++)
+		{
+			free(gMarioState->partsAnimationMatrix[i][j]);
+		}
+		free(gMarioState->partsAnimationMatrix[i]);
+	}
+	free(gMarioState->partsAnimationMatrix);
 
     free( gMarioObject );
     free_area( gCurrentArea );
@@ -814,4 +838,22 @@ void sm64_set_mario_tank_mode(int marioId, bool tankMode)
 	set_global_mario_state(marioId);
 
 	gMarioState->tankMode=tankMode;
+}
+
+float** sm64_get_mario_part_animation_matrix(int marioId, int partId)
+{
+	if( marioId >= s_mario_instance_pool.size || s_mario_instance_pool.objects[marioId] == NULL )
+    {
+        return NULL;
+    }
+	
+	set_global_mario_state(marioId);
+
+	if(partId >= gMarioState->partsAnimationCount)
+	{
+		printf("Requested invalid part id %d for animation matrix when there's only %d\n", partId, gMarioState->partsAnimationCount);
+		return NULL;
+	}
+
+	return gMarioState->partsAnimationMatrix[partId];
 }

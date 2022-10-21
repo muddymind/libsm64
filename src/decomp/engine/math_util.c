@@ -1640,6 +1640,21 @@ void mtxf_identity(Mat4 mtx) {
 }
 
 /**
+ * Set mtx to the identity matrix
+ */
+void mtxf_identity_with_scaling(Mat4 mtx, f32 scaleFactor) {
+    register s32 i;
+    register f32 *dest;
+    // These loops must be one line to match on -O2
+
+    // initialize everything except the first and last cells to 0
+    for (dest = (f32 *) mtx + 1, i = 0; i < 14; dest++, i++) *dest = 0;
+
+    // initialize the diagonal cells to 1
+    for (dest = (f32 *) mtx, i = 0; i < 4; dest += 5, i++) *dest = scaleFactor;
+}
+
+/**
  * Set dest to a translation matrix of vector b
  */
 void mtxf_translate(Mat4 dest, Vec3f b) {
