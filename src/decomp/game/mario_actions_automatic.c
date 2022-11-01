@@ -625,6 +625,10 @@ s32 act_ledge_grab(struct MarioState *m) {
         } 
         // Failing all previous checks then we assume the player wants to fall down.
         else {
+            if(mario_check_viable_ladder_action(m, ACT_LEDGE_GRAB))
+            {
+                return set_mario_action(m, ACT_LADDER_IDLE, 0);
+            }
             return let_go_of_ledge(m);
         }
     }

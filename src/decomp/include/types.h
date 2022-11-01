@@ -379,6 +379,11 @@ struct MarioState
     s16 tankRightCount; // libsm64 tomb raider: added field
     float ***partsAnimationMatrix;
     float animationScaling;
+    /**
+     * @brief [0 - X Axis; 1 Z Axis][0 - negative; 1 - positive]
+     * 
+     */
+    bool climbDirection[2][2];
 
     int partsAnimationCount;
 };

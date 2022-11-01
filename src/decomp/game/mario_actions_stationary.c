@@ -22,6 +22,7 @@
 #include "../include/mario_animation_ids.h"
 #include "../include/object_fields.h"
 #include "../include/mario_geo_switch_case_ids.h"
+#include "mario_actions_ladder.h"
 
 
 s32 check_common_idle_cancels(struct MarioState *m) {
@@ -122,6 +123,14 @@ s32 check_common_hold_idle_cancels(struct MarioState *m) {
 }
 
 s32 act_idle(struct MarioState *m) {
+    
+    if (m->input & INPUT_B_PRESSED) {
+        if(mario_check_viable_ladder_action(m, ACT_IDLE))
+        {
+            return set_mario_action(m, ACT_LADDER_START_GRAB, 0);
+        }
+    }
+    
     if (m->quicksandDepth > 30.0f) {
         return set_mario_action(m, ACT_IN_QUICKSAND, 0);
     }
@@ -517,6 +526,7 @@ s32 act_hold_heavy_idle(struct MarioState *m) {
 }
 
 s32 act_standing_against_wall(struct MarioState *m) {
+
     if (m->input & INPUT_UNKNOWN_10) {
         return set_mario_action(m, ACT_SHOCKWAVE_BOUNCE, 0);
     }
@@ -530,6 +540,10 @@ s32 act_standing_against_wall(struct MarioState *m) {
     }
 
     if (m->input & INPUT_B_PRESSED) {
+        if(mario_check_viable_ladder_action(m, ACT_STANDING_AGAINST_WALL))
+        {
+            return set_mario_action(m, ACT_LADDER_START_GRAB, 0);
+        }
         return set_mario_action(m, ACT_PUNCHING, 0);
     }
 

@@ -19,6 +19,7 @@
 #include "../include/mario_animation_ids.h"
 #include "../include/object_fields.h"
 #include "../include/mario_geo_switch_case_ids.h"
+#include "mario_actions_ladder.h"
 
 void play_flip_sounds(struct MarioState *m, s16 frame1, s16 frame2, s16 frame3) {
     s32 animFrame = m->marioObj->header.gfx.animInfo.animFrame;
@@ -111,6 +112,10 @@ s32 check_fall_damage(struct MarioState *m, u32 hardFallAction) {
 
 s32 check_kick_or_dive_in_air(struct MarioState *m) {
     if (m->input & INPUT_B_PRESSED) {
+        if(mario_check_viable_ladder_action(m, AIR_STEP_NONE))
+        {
+            return set_mario_action(m, ACT_LADDER_START_GRAB, 0);
+        }
         return set_mario_action(m, m->forwardVel > 28.0f ? ACT_DIVE : ACT_JUMP_KICK, 0);
     }
     return FALSE;
@@ -529,6 +534,10 @@ s32 act_freefall(struct MarioState *m) {
     s32 animation;
 
     if (m->input & INPUT_B_PRESSED) {
+        if(mario_check_viable_ladder_action(m, ACT_FREEFALL))
+        {
+            return set_mario_action(m, ACT_LADDER_START_GRAB, 0);
+        }
         return set_mario_action(m, ACT_DIVE, 0);
     }
 
@@ -828,6 +837,13 @@ s32 act_water_jump(struct MarioState *m) {
 
     play_mario_sound(m, SOUND_ACTION_UNKNOWN432, 0);
     set_mario_animation(m, MARIO_ANIM_SINGLE_JUMP);
+
+    if (m->input & INPUT_B_PRESSED) {
+        if(mario_check_viable_ladder_action(m, ACT_WATER_JUMP))
+        {
+            return set_mario_action(m, ACT_LADDER_START_GRAB, 0);
+        }
+    }
 
     switch (perform_air_step(m, AIR_STEP_CHECK_LEDGE_GRAB)) {
         case AIR_STEP_LANDED:
@@ -1245,6 +1261,14 @@ s32 act_thrown_forward(struct MarioState *m) {
 }
 
 s32 act_soft_bonk(struct MarioState *m) {
+
+    if (m->input & INPUT_B_PRESSED) {
+        if(mario_check_viable_ladder_action(m, ACT_SOFT_BONK))
+        {
+            return set_mario_action(m, ACT_LADDER_START_GRAB, 0);
+        }
+    }
+
     if (check_wall_kick(m)) {
         return TRUE;
     }

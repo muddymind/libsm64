@@ -27,6 +27,7 @@
 #include "mario_actions_object.h"
 #include "mario_actions_stationary.h"
 #include "mario_actions_submerged.h"
+#include "mario_actions_ladder.h"
 #include "mario_misc.h"
 #include "mario_step.h"
 // #include "memory.h"
@@ -976,6 +977,13 @@ static u32 set_mario_action_moving(struct MarioState *m, u32 action, UNUSED u32 
 }
 
 /**
+ * Transitions for a variety of ladder actions.
+ */
+static u32 set_mario_action_ladder(struct MarioState *m, u32 action, UNUSED u32 actionArg) {
+    return action;
+}
+
+/**
  * Transition for certain submerged actions, which is actually just the metal jump actions.
  */
 static u32 set_mario_action_submerged(struct MarioState *m, u32 action, UNUSED u32 actionArg) {
@@ -1032,6 +1040,9 @@ u32 set_mario_action(struct MarioState *m, u32 action, u32 actionArg) {
 
         case ACT_GROUP_CUTSCENE:
             action = set_mario_action_cutscene(m, action, actionArg);
+            break;
+        case ACT_GROUP_LADDER:
+            action = set_mario_action_ladder(m, action, actionArg);
             break;
     }
 
@@ -1362,7 +1373,7 @@ void update_mario_geometry_inputs(struct MarioState *m) {
     // We want to allow Mario to be able to climb the same steps lara would. 
     // We will only retain big wall check and increase it's displacement to 65 units to allow Mario to reach the same height.
     // We also don't want to check for wall collision if we are shimmying or swimming since those are taken care of at the actions logic.
-    if( m->action != ACT_LEDGE_GRAB && (m->action & ACT_GROUP_MASK) != ACT_GROUP_SUBMERGED) {
+    if( m->action != ACT_LEDGE_GRAB && (m->action & ACT_GROUP_MASK) != ACT_GROUP_SUBMERGED && (m->action & ACT_GROUP_MASK) != ACT_GROUP_LADDER) {
         f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 65.0f, 50.0f);
     }        
     //f32_find_wall_collision(&m->pos[0], &m->pos[1], &m->pos[2], 30.0f, 24.0f);
@@ -1411,7 +1422,7 @@ void update_mario_geometry_inputs(struct MarioState *m) {
             }
         }
 
-        if (m->pos[1] > m->floorHeight + 100.0f) {
+        if (m->pos[1] > m->floorHeight + 100.0f && (m->action & ACT_GROUP_MASK) != ACT_GROUP_LADDER) {
             m->input |= INPUT_OFF_FLOOR;
         }
 
@@ -1821,6 +1832,9 @@ s32 execute_mario_action(UNUSED struct Object *o) {
                 case ACT_GROUP_OBJECT:
                     reset_mario_tank_counts();
                     inLoop = mario_execute_object_action(gMarioState);
+                    break;
+                case ACT_GROUP_LADDER:
+                    inLoop = mario_execute_ladder_action(gMarioState);
                     break;
             }
         }
