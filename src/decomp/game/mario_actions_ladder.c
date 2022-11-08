@@ -366,6 +366,33 @@ s32 act_ladder_idle(struct MarioState *m)
     return FALSE;
 }
 
+s32 act_zip_line_grab_start(struct MarioState *m)
+{
+    set_mario_animation(m, MARIO_ANIM_SINGLE_JUMP);
+    return FALSE;
+}
+
+s32 act_zip_line_grab(struct MarioState *m)
+{
+    set_mario_animation(m, MARIO_ANIM_IDLE_ON_LEDGE);
+    return FALSE;
+}
+
+s32 act_zip_line_slide(struct MarioState *m)
+{
+    set_mario_animation(m, MARIO_ANIM_IDLE_ON_LEDGE);
+    return FALSE;
+}
+
+s32 act_zip_line_cancel(struct MarioState *m)
+{
+    m->vel[1] = 0.0f;
+    m->forwardVel = 8.0f; // previously -8.0f
+    m->pos[0] -= 5.0f * sins(m->faceAngle[1]);
+    m->pos[2] -= 5.0f * coss(m->faceAngle[1]);
+
+    return set_mario_action(m, ACT_FREEFALL, 0);
+}
 
 s32 check_common_ladder_cancels(struct MarioState *m) {
     if (m->pos[1] < m->waterLevel - 100) {
@@ -388,6 +415,10 @@ s32 mario_execute_ladder_action(struct MarioState *m) {
         case ACT_LADDER_IDLE:              cancel = act_ladder_idle(m);              break;
         case ACT_LADDER_MOVING_VERTICAL:   cancel = act_ladder_moving_vertical(m);   break;
         case ACT_LADDER_MOVING_HORIZONTAL: cancel = act_ladder_moving_horizontal(m); break;
+        case ACT_ZIPLINE_GRAB_START:       cancel = act_zip_line_grab_start(m);      break;
+        case ACT_ZIPLINE_GRAB:             cancel = act_zip_line_grab(m);            break;
+        case ACT_ZIPLINE_SLIDE:            cancel = act_zip_line_slide(m);           break;
+        case ACT_ZIPLINE_CANCEL:           cancel = act_zip_line_cancel(m);          break;
     }
     /* clang-format on */
 

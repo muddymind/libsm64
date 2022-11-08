@@ -377,7 +377,10 @@ struct MarioState
     bool tankMode; // libsm64 tomb raider: added field
     s16 tankLeftCount; // libsm64 tomb raider: added field
     s16 tankRightCount; // libsm64 tomb raider: added field
+    
     float ***partsAnimationMatrix;
+    int partsAnimationCount;
+
     float animationScaling;
     /**
      * @brief [0 - X Axis; 1 Z Axis][0 - negative; 1 - positive]
@@ -385,7 +388,6 @@ struct MarioState
      */
     bool climbDirection[2][2];
 
-    int partsAnimationCount;
 };
 
 #endif // TYPES_H

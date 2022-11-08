@@ -410,6 +410,10 @@
 #define ACT_LADDER_IDLE                0x000003C1 // (0x1C1 | ACT_FLAG_STATIONARY)
 #define ACT_LADDER_MOVING_VERTICAL     0x000005c2 // (0x1C2 | ACT_FLAG_MOVING)
 #define ACT_LADDER_MOVING_HORIZONTAL   0x000005c3 // (0x1C3 | ACT_FLAG_MOVING)
+#define ACT_ZIPLINE_GRAB_START         0x000005c4 // (0x1C4 | ACT_FLAG_MOVING)
+#define ACT_ZIPLINE_GRAB               0x000005c5 // (0x1C5 | ACT_FLAG_MOVING)
+#define ACT_ZIPLINE_SLIDE              0x000005c6 // (0x1C6 | ACT_FLAG_MOVING)
+#define ACT_ZIPLINE_CANCEL             0x000005c7 // (0x1C7 | ACT_FLAG_MOVING)
 
 /*
  this input mask is unused by the controller,
